@@ -6,3 +6,4 @@ Hello project members!
 This is our code
 How are you?
 >>>>>>> Stashed changes
+Wtsup
