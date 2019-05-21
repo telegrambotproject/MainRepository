@@ -39,5 +39,3 @@ def get_film(message):
         bot.send_photo(message.chat.id, photo=response['Poster'])
 
 bot.polling()
-
-bot
