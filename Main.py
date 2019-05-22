@@ -44,6 +44,7 @@ def handle_location(message):
     print("{0}, {1}".format(message.location.latitude, message.location.longitude))
 
 
+
 bot.polling()
 
 
