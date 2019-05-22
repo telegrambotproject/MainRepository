@@ -38,7 +38,13 @@ def get_film(message):
     if response['Poster'] != 'N/A':
         bot.send_photo(message.chat.id, photo=response['Poster'])
 
-# bot.polling()
+
+@bot.message_handler(content_types=['location'])
+def handle_location(message):
+    print("{0}, {1}".format(message.location.latitude, message.location.longitude))
+
+
+bot.polling()
 
 
 # STARTING THE IMDB KEYWORDS SEARCH
@@ -57,4 +63,4 @@ def key_search(keys):
 
 
 key_list = ['Hero', 'Violence', 'Tough guy']  # Presumably got it from the text message
-print(key_search(key_list))
+# print(key_search(key_list))
