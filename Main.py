@@ -3,6 +3,7 @@ import requests
 
 location = ['']
 
+
 def search(loc, name):
     url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
     key = ""
