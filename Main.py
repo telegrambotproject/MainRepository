@@ -2,11 +2,13 @@ import telebot
 import requests
 
 location = ['']
+waypoints = []
+waypoint_id = []
+key = ""
 
 
-def search(loc, name):
+def search(loc, name, key):
     url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-    key = ""
     params = {'key': key,
               'name': name,
               'radius': 1500,
@@ -14,6 +16,21 @@ def search(loc, name):
               'rankby': 'prominence'}
     r = requests.get(url=url, params=params)
     return r.json()
+
+
+def route(loc, waypoints, waypoint_id, place_loc):
+    url = 'https://www.google.com/maps/dir/'
+    params = {'api': '1',
+              'origin': loc,
+              'waypoints': '|'.join(waypoints[:-1]),
+              'waypoint_place_ids': '|'.join(waypoint_id[:-1]),
+              'destination': waypoints[-1],
+              'travelmode': 'walking'}
+    p = requests.Request('GET', url=url, params=params).prepare()
+    print(p.url)
+    waypoints.clear()
+    waypoint_id.clear()
+    return p.url
 
 
 telebot.apihelper.proxy = {'https': 'https://188.152.158.252:8118'}
@@ -35,13 +52,18 @@ def handle_location(message):
 def get_place(message):
     places = message.text.split(',')
     for p in places:
-        response = search(location[0], p)
+        response = search(location[0], p, key)
         print(response['results'][0])
         lat = response['results'][0]['geometry']['location']['lat']
         lon = response['results'][0]['geometry']['location']['lng']
         bot.send_message(message.chat.id, response['results'][0]['name'])
-        bot.send_location(message.chat.id, lat, lon)
-        location[0] = f'{lat}, {lon}'
+        waypoints.append(f'{lat}, {lon}')
+        waypoint_id.append(response['results'][0]['place_id'])
+    m = route(location[0], waypoints, waypoint_id, location[0])
+
+    bot.send_message(message.chat.id, m)
+
+
 
 
 bot.polling()
