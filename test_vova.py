@@ -1,18 +1,32 @@
 import telebot
 
-telebot.apihelper.proxy = {'https': 'https://51.77.210.229:3128'}
+
+telebot.apihelper.proxy = {'https': 'https://5.249.155.29:80'}
 bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id, 'Hello there! Wanna see some movies?')
-    custom_keyboard = [['Yes, please'],
-                       ['Hell no!']]
-    reply_markup = telebot.ReplyKeyboardMarkup(custom_keyboard)
-    bot.send_message(chat_id=message.chat.id,
-                     text='',
-                     reply_markup=reply_markup)
+    markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+    button_1 = telebot.types.KeyboardButton('Yes, please!')
+    button_2 = telebot.types.KeyboardButton('Hell no!')
+    markup.add(button_1, button_2)
+    bot.send_message(message.chat.id, 'Hello there! Wanna see some movies?',
+                     reply_markup=markup)
 
 
-bot.polling(none_stop=False, interval=0, timeout=20)
+@bot.message_handler(content_types=['text'])
+def first_chose(message):
+    markup = telebot.types.ReplyKeyboardRemove(selective=False)
+    if message.text == 'Yes, please!':
+        bot.send_message(message.chat.id, 'Let us get going then',
+                         reply_markup=markup)
+    elif message.text == 'Hell no!':
+        bot.send_message(message.chat.id, 'I am sorry to hear that',
+                         reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, 'Please, choose one of the given two',
+                         reply_markup=markup)
+
+
+bot.polling()
