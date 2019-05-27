@@ -18,19 +18,19 @@ def start(message):
 
 @bot.message_handler(content_types=['text'])
 def first_chose(message):
-    markup = telebot.types.ReplyKeyboardRemove(selective=False)
     if message.text == 'Yes, please!':
+        markup = telebot.types.ReplyKeyboardRemove(selective=False)
         bot.send_message(message.chat.id, "Let's get going then",
                      reply_markup=markup)
         request = 'http://api.kinopoisk.cf/getTodayFilms'
         response_body = urlopen(request).read()
         bot.send_message(message.chat.id, response_body)
     elif message.text == 'Hell no!':
+        markup = telebot.types.ReplyKeyboardRemove(selective=False)
         bot.send_message(message.chat.id, 'I am sorry to hear that',
                          reply_markup=markup)
     else:
-        bot.send_message(message.chat.id, 'Please, choose one of the given two',
-                         reply_markup=markup)
+        bot.send_message(message.chat.id, 'Please, choose one of the given two')
 
 
 bot.polling()
