@@ -21,7 +21,7 @@ def first_chose(message):
     if message.text == 'Yes, please!':
         markup = telebot.types.ReplyKeyboardRemove(selective=False)
         bot.send_message(message.chat.id, "Let's get going then",
-                     reply_markup=markup)
+                         reply_markup=markup)
         request = 'http://api.kinopoisk.cf/getTodayFilms'
         response_body = urlopen(request).read()
         bot.send_message(message.chat.id, response_body)
