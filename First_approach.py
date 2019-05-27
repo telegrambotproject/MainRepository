@@ -38,23 +38,6 @@ def get_film(message):
     if response['Poster'] != 'N/A':
         bot.send_photo(message.chat.id, photo=response['Poster'])
 
-# bot.polling()
+bot.polling()
 
 
-# STARTING THE IMDB KEYWORDS SEARCH
-def key_change(key):
-    parts = key.split(' ')
-    key = '-'.join(parts).lower()
-    return key
-
-
-def key_search(keys):
-    keys_2 = [key_change(k) for k in keys]
-    imdb_url = 'https://www.imdb.com/search/keyword'
-    params = {"keywords": keys_2}
-    r = requests.get(url=imdb_url, params=params)
-    return r.text
-
-
-key_list = ['Hero', 'Violence', 'Tough guy']  # Presumably got it from the text message
-print(key_search(key_list))
