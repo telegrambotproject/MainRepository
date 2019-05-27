@@ -1,4 +1,5 @@
 import telebot
+from urllib.request import urlopen
 
 
 telebot.apihelper.proxy = {'https': 'https://5.249.155.29:80'}
@@ -21,6 +22,10 @@ def first_chose(message):
     if message.text == 'Yes, please!':
         bot.send_message(message.chat.id, 'Let us get going then',
                          reply_markup=markup)
+        request = 'http://api.kinopoisk.cf/getTodayFilms'
+        response_body = urlopen(request).read()
+        bot.send_message(message.chat.id, response_body)
+
     elif message.text == 'Hell no!':
         bot.send_message(message.chat.id, 'I am sorry to hear that',
                          reply_markup=markup)
