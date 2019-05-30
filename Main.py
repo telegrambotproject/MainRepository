@@ -4,10 +4,15 @@ import urllib
 import urllib.request as urlrequest
 from pydub import AudioSegment
 import speech_recognition as sr
+import apiai, json
 import ssl
 
-with open('auth.json') as f:
+with open('info/auth.json') as f:
     credentials = f.read()
+with open('info/dialogflow.txt') as f:
+    dialogflow = f.read()
+with open('info/key.txt') as f:
+    key = f.read()
 
 try:
     _create_unverified_https_context = ssl._create_unverified_context
@@ -26,14 +31,13 @@ opener = urlrequest.build_opener(proxy_handler)
 urllib.request.install_opener(opener)
 
 telebot.apihelper.proxy = proxy
-API_TOKEN = ''
+API_TOKEN = '846385082:AAHf9ZM9ulaRR0b79g9oBC1mRqCXaor6GiA'
 bot = telebot.TeleBot(API_TOKEN)
 
 
 location = ['']
 waypoints = []
 waypoint_id = []
-key = ""
 
 
 def search(loc, name, key):
@@ -105,7 +109,18 @@ def handle_voice(message):
         audio = r.record(source)
         try:
             text = r.recognize_google_cloud(audio, credentials_json=credentials)
+            request = apiai.ApiAI(dialogflow).text_request()
+            request.lang = 'en'
+            request.query = text
             bot.send_message(message.chat.id, text)
+            responseJson = json.loads(request.getresponse().read().decode('utf-8'))
+            print(responseJson)
+            response = responseJson['result']['fulfillment']['speech']  # Разбираем JSON и вытаскиваем ответ
+            # Если есть ответ от бота - присылаем юзеру, если нет - бот его не понял
+            if response:
+                bot.send_message(message.chat.id, text=response)
+            else:
+                bot.send_message(message.chat.id, text='Я Вас не совсем понял!')
         except sr.UnknownValueError:
             bot.send_message(message.chat.id, 'Не понял')
         except sr.RequestError as e:
