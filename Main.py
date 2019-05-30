@@ -33,7 +33,7 @@ bot = telebot.TeleBot(API_TOKEN)
 location = ['']
 waypoints = []
 waypoint_id = []
-key = "AIzaSyDJKv2vW1R2Fk8qctInmViHDoAhsu7_wcA"
+key = ""
 
 
 def search(loc, name, key):
