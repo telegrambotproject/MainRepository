@@ -23,10 +23,11 @@ def search_movies(id):
 # Vova: I changed the return of def below so that it fits the bot messages
 
 
-def search_current_movies():
+def search_current_movies(movie_number):  # кол-во фильмов
     URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/recommend'
     PARAMS = {
-        'apikey':key
+        'apikey':key,
+        'limit': movie_number
     }
     r = requests.get(url=URL,params=PARAMS)
     data = r.json()
