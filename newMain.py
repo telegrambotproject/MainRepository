@@ -23,7 +23,7 @@ def start(message):
 def first_chose(message):
     if message.text == 'Yes, please!':
         global list_of_movies
-        list_of_movies = functions.search_current_movies()
+        list_of_movies = functions.search_current_movies(5)
         markup = telebot.types.ReplyKeyboardMarkup()
         button_1 = telebot.types.KeyboardButton('1')
         button_2 = telebot.types.KeyboardButton('2')
@@ -44,8 +44,6 @@ def first_chose(message):
                          reply_markup=markup)
     else:
         bot.send_message(message.chat.id, 'Please, choose one of the given two')
-
-@bot.message_handler(content_types=['text'])
 
 
 bot.polling()
