@@ -45,5 +45,7 @@ def first_chose(message):
     else:
         bot.send_message(message.chat.id, 'Please, choose one of the given two')
 
+@bot.message_handler(content_types=['text'])
+
 
 bot.polling()
