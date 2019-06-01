@@ -1,10 +1,7 @@
 import telebot
 from urllib.request import urlopen
 import functions
-
-
 import requests
-
 
 telebot.apihelper.proxy = {'https': 'https://153.92.5.186:8080'}
 bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
