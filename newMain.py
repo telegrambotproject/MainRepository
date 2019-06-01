@@ -22,6 +22,7 @@ def start(message):
 @bot.message_handler(content_types=['text'])
 def first_chose(message):
     if message.text == 'Yes, please!':
+        global list_of_movies
         list_of_movies = functions.search_current_movies()
         markup = telebot.types.ReplyKeyboardMarkup()
         button_1 = telebot.types.KeyboardButton('1')
@@ -33,7 +34,7 @@ def first_chose(message):
         print(list_of_movies)
         line = ''
         for m in list_of_movies:
-            line += f'{m[0]}"{m[1]}", {" ".join(m[2:])}\n'
+            line += f'{m[1]}"{m[2]}", {" ".join(m[3:])}\n'
         bot.send_message(message.chat.id, line)
         bot.send_message(message.chat.id, "Let's get going then! Which of these interest you the most?",
                          reply_markup=markup)
