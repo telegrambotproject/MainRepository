@@ -31,8 +31,9 @@ def search_current_movies():
     r = requests.get(url=URL,params=PARAMS)
     data = r.json()
     data_new = []
+    print(data)
     for i in range(5):
-        data_new += [[f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
+        data_new += [[data[i]["imdb_id"], f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
     return data_new
 
 
