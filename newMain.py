@@ -4,7 +4,6 @@ import functions
 import requests
 
 
-
 telebot.apihelper.proxy = {'https': 'https://153.92.5.186:8080'}
 bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
@@ -44,6 +43,12 @@ def first_chose(message):
                          reply_markup=markup)
     else:
         bot.send_message(message.chat.id, 'Please, choose one of the given two')
+    bot.register_next_step_handler(message, one_movie)
 
+
+def one_movie(message):
+    movie = functions.search_movies(list_of_movies[int(message.text) - 1][0])
+    print(movie)
+    bot.send_message(message.chat.id, movie[0]['annotationFull'])
 
 bot.polling()
