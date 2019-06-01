@@ -3,6 +3,8 @@ from urllib.request import urlopen
 import functions
 import requests
 
+
+
 telebot.apihelper.proxy = {'https': 'https://153.92.5.186:8080'}
 bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
@@ -28,11 +30,11 @@ def first_chose(message):
         button_4 = telebot.types.KeyboardButton('4')
         button_5 = telebot.types.KeyboardButton('5')
         markup.add(button_1, button_2, button_3, button_4, button_5)
-        for i in range(len(list_of_movies)):
-            line = ''
-            for j in range(len(list_of_movies[i])):
-                line += str(list_of_movies[i][j])
-            bot.send_message(message.chat.id, line)
+        print(list_of_movies)
+        line = ''
+        for m in list_of_movies:
+            line += f'{m[0]}"{m[1]}", {" ".join(m[2:])}\n'
+        bot.send_message(message.chat.id, line)
         bot.send_message(message.chat.id, "Let's get going then! Which of these interest you the most?",
                          reply_markup=markup)
     elif message.text == 'Hell no!':
