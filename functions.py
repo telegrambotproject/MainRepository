@@ -32,7 +32,6 @@ def search_current_movies(movie_number):  # кол-во фильмов
     r = requests.get(url=URL,params=PARAMS)
     data = r.json()
     data_new = []
-    print(data)
     for i in range(5):
         data_new += [[data[i]["imdb_id"], f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
     return data_new
@@ -41,13 +40,12 @@ def search_current_movies(movie_number):  # кол-во фильмов
 def nearest_cinemas():
     URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
     PARAMS = {
-        'apikey':key,
-        'sort':5000,
-        'city':1,
-        'title':"Кинотеатр «5 Звезд на Павелецкой»",
-        'timeBeforeSeance':60,
-        'latitude':55.921336,
-        'longitude':37.991876
+        'apikey': key,
+        'sort': 5000,
+        'city': 1,
+        'timeBeforeSeance':  60,
+        'latitude': 55.921336,
+        'longitude': 37.991876
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
