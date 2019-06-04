@@ -92,7 +92,7 @@ def search_new_by_ganres(ganre):
 
 # search_new_by_genres('экшен') there are around 30 ganres
 
-def get_id(cinema_name):
+def get_id_cinema(cinema_name):
     URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
     PARAMS = {
         'apikey':key
@@ -107,19 +107,16 @@ def get_id(cinema_name):
 #Example: get_id('5 Звезд на Новокузнецкой')
 
 
-def create_dictionary_cinemas():
-    d = {}
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
+def get_id_movie(movie_name):
+    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies'
     PARAMS = {
         'apikey':key
     }
-    r = requests.get(url=URL, params=PARAMS)
+    r = requests.get(url=URL,params=PARAMS)
     data = r.json()
     for i in range(len(data)):
-        dkey = data[i]['shortTitle']
-        d[dkey] = int(data[i]['id'])
-    print(d)
+        if data[i]['originalTitle'] == movie_name:
+            print(data[0]['id'])
 
-#creation of dictionary
-#key is the name, and value is ID of the cinema
-#Example: create_dictionary_cinemas()
+#give this function a name of the movie and it will give you the ID
+#Example: get_id_movie('Avengers: Endgame')
