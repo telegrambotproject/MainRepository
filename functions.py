@@ -85,8 +85,8 @@ def search_new_by_ganres(ganre):
     }
     r = requests.get(url=URL,params=PARAMS)
     data = r.json()
-    for i in range((len(data)) - 1):
-        for j in range((len(data[i]['genres']) - 1)):
+    for i in range(len(data)):
+        for j in range(len(data[i]['genres'])):
             if data[i]['genres'][j]['name'] == ganre:
                 print(data[i]['originalTitle'])
 
