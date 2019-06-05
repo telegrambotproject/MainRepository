@@ -6,16 +6,16 @@ import requests
 with open('apikey.txt') as f:
     key = f.read()
 
-
-def search_movies(id):
+    
+def search_movies(movie_id):
     URL = 'https://api.kinohod.ru/api/rest/site/v1/movies'
     PARAMS = {
         'apikey':key,
-        'id':id
+        'id':movie_id
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    return data
+    return data[0]['originalTitle'], data[0]['annotationFull'], data[0]['genres'][0]['name']
 
 # Example: id = 23211
 # print(search_movies(23211))
