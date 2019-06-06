@@ -1,10 +1,24 @@
-# DON'T FORGET TO IMPORT 'requests' library
 import requests
+import pickle
+
 
 # functions for requests
 
-with open('apikey.txt') as f:
+with open('keys/omdbapi.txt') as f:
+    omdb_key = f.read()
+
+with open('keys/apikey.txt') as f:
     key = f.read()
+
+
+def save_obj(obj, name):  # для базы данных
+    with open('obj/' + name + '.pkl', 'wb') as file:
+        pickle.dump(obj, file, pickle.HIGHEST_PROTOCOL)
+
+
+def load_obj(name):
+    with open('obj/' + name + '.pkl', 'rb') as file:
+        return pickle.load(file)
 
     
 def search_movies(movie_id):
@@ -29,10 +43,11 @@ def search_current_movies(movie_number):  # кол-во фильмов
         'apikey':key,
         'limit': movie_number
     }
-    r = requests.get(url=URL,params=PARAMS)
+    r = requests.get(url=URL, params=PARAMS)
     data = r.json()
+    print(data)
     data_new = []
-    for i in range(5):
+    for i in range(movie_number):
         data_new += [[data[i]["imdb_id"], f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
     return data_new
 
@@ -107,16 +122,7 @@ def get_id_cinema(cinema_name):
 #Example: get_id('5 Звезд на Новокузнецкой')
 
 
-def get_id_movie(movie_name):
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies'
-    PARAMS = {
-        'apikey':key
-    }
-    r = requests.get(url=URL,params=PARAMS)
-    data = r.json()
-    for i in range(len(data)):
-        if data[i]['originalTitle'] == movie_name:
-            print(data[0]['id'])
-
+def get_imdb_id(movie_name):
+    pass
 #give this function a name of the movie and it will give you the ID
 #Example: get_id_movie('Avengers: Endgame')
