@@ -35,6 +35,7 @@ def movies(message):
                      reply_markup=markup)
     bot.register_next_step_handler(message, first_chose)
 
+
 def first_chose(message):
     if message.text == 'Yes, please!':
         global list_of_movies
@@ -48,7 +49,7 @@ def first_chose(message):
         markup.add(button_1, button_2, button_3, button_4, button_5)
         line = ''
         for m in list_of_movies:
-            line += f'{m[1]}"{m[2]}", {" ".join(m[3:])}\n'
+            line += f'"{m["originalTitle"]}", Imdb rating: {m["imdb_rating"]}\n'
         bot.send_message(message.chat.id, line)
         bot.send_message(message.chat.id, "Let's get going then! Which of these interest you the most?",
                          reply_markup=markup)
@@ -59,15 +60,16 @@ def first_chose(message):
 
 def selected_movie_description(message):
     try:
-        movie = functions.search_movies(list_of_movies[int(message.text) - 1][0])
+        movie = list_of_movies[int(message.text) - 1]
         print(movie)
+        bot.send_message(message.chat.id, movie["annotationFull"])
 
         markup = telebot.types.ReplyKeyboardMarkup()
         button_1 = telebot.types.KeyboardButton('Yep')
         button_2 = telebot.types.KeyboardButton('Nah')
         markup.add(button_1, button_2)
 
-        bot.send_message(message.chat.id, f'{movie[0]["annotationFull"]}\n\nAre you still interested?',
+        bot.send_message(message.chat.id, f'{movie["originalTitle"]}\n\nAre you still interested?',
                          reply_markup=markup)
         bot.register_next_step_handler(message, cinemas_nearby)
     except ValueError:

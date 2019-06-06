@@ -23,14 +23,15 @@ def load_obj(name):
         return pickle.load(file)
 
     
-def search_movies(movie_id):
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies'
+def search_movies(movie_id):  # Не работает, нужно переписать!!!!
+    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/' + str(movie_id)
+    print(URL)
     PARAMS = {
-        'apikey':key,
-        'id':movie_id
+        'apikey': key
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
+    print(data)
     return data[0]['originalTitle'], data[0]['annotationFull'], data[0]['genres'][0]['name']
 
 # Example: id = 23211
@@ -47,10 +48,7 @@ def search_current_movies(movie_number):  # кол-во фильмов
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    data_new = []
-    for i in range(movie_number):
-        data_new += [[data[i]["imdb_id"], f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
-    return data_new
+    return data
 
 
 def nearest_cinemas():
