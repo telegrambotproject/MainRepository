@@ -8,7 +8,7 @@ global d
 d = functions.load_obj('data')
 print(d)
 
-user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
+user_params = {'imdb_id': (), 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
 
 
@@ -57,6 +57,7 @@ def first_chose(message):
     elif message.text == 'Hell no!':
         markup = telebot.types.ReplyKeyboardRemove(selective=False)
         bot.send_message(message.chat.id, 'I am sorry to hear that')
+
 
 def selected_movie_description(message):
     try:
@@ -122,7 +123,7 @@ def notify_films(message):  # Продолжение notify_start()
 def add_film_to_user(message):  # Добавляю фильмы в базу данных пользователя
     if message.text == 'Yes':
         for filmid in all_film_ids:
-            if filmid[0] not in d[message.chat.id]['imdb_id']:
+            if filmid not in d[message.chat.id]['imdb_id']:
                 d[message.chat.id]['imdb_id'].append(filmid)
         bot.send_message(message.chat.id, 'Okay, I will notify you when it (they) come out in your cinema \n'
                                           'You can now check all your upcoming films by writing /my_films',
