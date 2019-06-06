@@ -6,12 +6,15 @@ bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
 global d
 d = functions.load_obj('data')
+print(d)
 
+remove_markup = telebot.types.ReplyKeyboardRemove()
 
 @bot.message_handler(commands=['start'])
 def start(message):
     if message.chat.id not in d:  # добавляю нового пользователя в базу данных
-        d[message.chat.id] = {}
+        d[message.chat.id] = {'imdb_id': [],
+                              'favourite_cinema': ''}
         functions.save_obj(d, 'data')
     bot.send_message(message.chat.id, 'List of commands:\n /start - to see all commands\n '
                                       '/movies \n'
@@ -67,21 +70,51 @@ def selected_movie_description(message):
 # Here we will place a function on location which Kirill is developing!!!
 # Next one is supposed to work which users location!
 
+
 def cinemas_nearby(coordinates):
     functions.nearest_cinemas()
 
 
-
 @bot.message_handler(commands=['notify'])
-def notify(message):
+def notify_start(message):
     bot.send_message(message.chat.id, 'Write upcoming movie/movies you want to be notified about (or multiple ones)\n'
                                       'Ex: Black widow, Spider man')
     bot.register_next_step_handler(message, notify_films)
 
+
 def notify_films(message):
-    #imdb_id = functions.get_imdb_id(message.text)
-    imdb_id = '6320628'
-    #d.setdefault(message.chat.id, message.chat.id).get()
+    global all_film_ids
+    all_film_ids = []
+    for m in message.text.split(','):
+        imdb_id = functions.get_imdb_id(m)
+        if imdb_id[0] != False:
+            bot.send_message(message.chat.id, f'"{imdb_id[1]}" will be released in {imdb_id[2]}.\n')
+            all_film_ids.append(imdb_id)
+    if all_film_ids:
+        markup = telebot.types.ReplyKeyboardMarkup()
+        button_1 = telebot.types.KeyboardButton('Yes')
+        button_2 = telebot.types.KeyboardButton('No')
+        button_3 = telebot.types.KeyboardButton('Try another film')
+        markup.add(button_1, button_2, button_3)
+        bot.send_message(message.chat.id, 'Do you want me to send you notifications?', reply_markup=markup)
+        bot.register_next_step_handler(message, add_film_to_user)
+
+
+def add_film_to_user(message):
+    if message.text == 'Yes':
+        for id in all_film_ids:
+            if id[0] not in d[message.chat.id]['imdb_id']:
+                d[message.chat.id]['imdb_id'].append(id)
+        bot.send_message(message.chat.id, 'Okay, I will notify you when it/they come out in your cinema \n'
+                                          'You can now check all your upcoming films by writing /my_films',
+                         reply_markup=remove_markup)
+        functions.save_obj(d, 'data')
+    elif message.text == 'Try other film':
+        bot.send_message(message.chat.id, 'Write upcoming movie/movies you want to be notified about',
+                         reply_markup=remove_markup)
+        bot.register_next_step_handler(message, notify_films)
+    else:
+        pass
 
 
 bot.polling()

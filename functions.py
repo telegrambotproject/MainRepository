@@ -1,11 +1,13 @@
 import requests
 import pickle
+import datetime
+now = datetime.datetime.now()
 
 
 # functions for requests
 
-with open('keys/omdbapi.txt') as f:
-    omdb_key = f.read()
+with open('keys/imdbapi.txt') as f:
+    imdb_key = f.read()
 
 with open('keys/apikey.txt') as f:
     key = f.read()
@@ -45,7 +47,6 @@ def search_current_movies(movie_number):  # кол-во фильмов
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    print(data)
     data_new = []
     for i in range(movie_number):
         data_new += [[data[i]["imdb_id"], f'{i+1}: ', data[i]["originalTitle"], 'IMDB rating:', data[i]["imdb_rating"]]]
@@ -122,7 +123,41 @@ def get_id_cinema(cinema_name):
 #Example: get_id('5 Звезд на Новокузнецкой')
 
 
-def get_imdb_id(movie_name):
-    pass
-#give this function a name of the movie and it will give you the ID
-#Example: get_id_movie('Avengers: Endgame')
+def date_conversion(date):  # converting %Y-%m-%d  to %b %d %Y
+    date_time_obj = datetime.datetime.strptime(date, '%Y-%m-%d')
+    return date_time_obj.strftime('%b %d %Y')
+
+
+def get_imdb_id(movie_name):  # get imdb id of an upcoming movie
+    URL = 'https://api.themoviedb.org/3/search/movie'
+    PARAMS = {
+        'api_key': imdb_key,
+        'query': movie_name
+    }
+    r = requests.get(url=URL, params=PARAMS)  # Первый реквест, что бы найти фильмы с похожим названием
+    data = r.json()
+    if r.status_code == 200 and int(data['total_results']) > 0:
+        film_date = "3000-01-01"
+        film_id = "False"
+        for m in data['results']:  # Беру ближайший фильм из списка
+            if now.strftime("%Y-%m-%d") < m['release_date'] and m['release_date'] < film_date:
+                film_date = m['release_date']
+                film_id = m['id']
+        if film_id != False:
+            URL = 'https://api.themoviedb.org/3/movie/' + str(film_id)
+            PARAMS = {
+                'api_key': imdb_key,
+            }
+            r = requests.get(url=URL, params=PARAMS)  # Реквест для нахождения imdb id фильма
+            data = r.json()
+            film_date = date_conversion(film_date)
+            return data.get('imdb_id', [False]*3)[2:], data.get('original_title', False), film_date
+        else:
+            print(data)
+            return False, None, None
+    else:
+        print(data)
+        return False, None, None
+
+
+
