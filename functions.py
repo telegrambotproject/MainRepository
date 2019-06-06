@@ -151,7 +151,7 @@ def get_imdb_id(movie_name):  # get imdb id of an upcoming movie
             r = requests.get(url=URL, params=PARAMS)  # Реквест для нахождения imdb id фильма
             data = r.json()
             film_date = date_conversion(film_date)
-            return data.get('imdb_id', [False]*3)[2:], data.get('original_title', False), film_date
+            return data.get('imdb_id', [False]*3)[2], data.get('original_title', False), film_date
         else:
             print(data)
             return False, None, None

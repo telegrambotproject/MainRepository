@@ -8,17 +8,21 @@ global d
 d = functions.load_obj('data')
 print(d)
 
+user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
+
 
 @bot.message_handler(commands=['start'])
 def start(message):
     if message.chat.id not in d:  # добавляю нового пользователя в базу данных
-        d[message.chat.id] = {'imdb_id': [],
-                              'favourite_cinema': ''}
-        functions.save_obj(d, 'data')
-    bot.send_message(message.chat.id, 'List of commands:\n /start - to see all commands\n '
+        d[message.chat.id] = user_params
+        functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
+    bot.send_message(message.chat.id, 'List of commands:\n'
+                                      '/start - to see all commands\n'
                                       '/movies \n'
-                                      '/notify - notify me of upcoming movies')
+                                      '/notify - notify me of upcoming movies\n'
+                                      '/my_films - to see or delete your current films\n'
+                                      '/forget_me - remove all information about the user', reply_markup=remove_markup)
 
 
 @bot.message_handler(commands=['movies'])
@@ -57,10 +61,12 @@ def selected_movie_description(message):
     try:
         movie = functions.search_movies(list_of_movies[int(message.text) - 1][0])
         print(movie)
+
         markup = telebot.types.ReplyKeyboardMarkup()
         button_1 = telebot.types.KeyboardButton('Yep')
         button_2 = telebot.types.KeyboardButton('Nah')
         markup.add(button_1, button_2)
+
         bot.send_message(message.chat.id, f'{movie[0]["annotationFull"]}\n\nAre you still interested?',
                          reply_markup=markup)
         bot.register_next_step_handler(message, cinemas_nearby)
@@ -75,46 +81,148 @@ def cinemas_nearby(coordinates):
     functions.nearest_cinemas()
 
 
-@bot.message_handler(commands=['notify'])
+@bot.message_handler(commands=['notify'])  # Функция для напоминания пользователю о выходе новых фильмов
 def notify_start(message):
-    bot.send_message(message.chat.id, 'Write upcoming movie/movies you want to be notified about (or multiple ones)\n'
+    bot.send_message(message.chat.id, 'Write upcoming movie (movies) you want to be notified about (or multiple ones)\n'
                                       'Ex: Black widow, Spider man')
     bot.register_next_step_handler(message, notify_films)
 
 
-def notify_films(message):
+def notify_films(message):  # Продолжение notify_start()
     global all_film_ids
     all_film_ids = []
-    for m in message.text.split(','):
-        imdb_id = functions.get_imdb_id(m)
-        if imdb_id[0] != False:
-            bot.send_message(message.chat.id, f'"{imdb_id[1]}" will be released in {imdb_id[2]}.\n')
-            all_film_ids.append(imdb_id)
-    if all_film_ids:
-        markup = telebot.types.ReplyKeyboardMarkup()
-        button_1 = telebot.types.KeyboardButton('Yes')
-        button_2 = telebot.types.KeyboardButton('No')
-        button_3 = telebot.types.KeyboardButton('Try another film')
-        markup.add(button_1, button_2, button_3)
-        bot.send_message(message.chat.id, 'Do you want me to send you notifications?', reply_markup=markup)
-        bot.register_next_step_handler(message, add_film_to_user)
+    if message.text.lower() == 'cancel':
+        bot.send_message(message.chat.id, 'Command canceled', reply_markup=remove_markup)
+    else:
+        text = ''
+        for m in message.text.split(','):
+            imdb_id = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
+            if imdb_id[0] != False:
+                text += f'"{imdb_id[1]}" will be released in {imdb_id[2]}.\n'
+                all_film_ids.append(imdb_id)
+        if all_film_ids:
+            bot.send_message(message.chat.id, text)
+
+            markup = telebot.types.ReplyKeyboardMarkup()
+            button_1 = telebot.types.KeyboardButton('Yes')
+            button_2 = telebot.types.KeyboardButton('No')
+            button_3 = telebot.types.KeyboardButton('Try another film')
+            markup.add(button_1, button_2, button_3)
+
+            bot.send_message(message.chat.id, 'Do you want me to send you notifications?', reply_markup=markup)
+            bot.register_next_step_handler(message, add_film_to_user)
+        else:
+            bot.send_message(message.chat.id, 'I did not understand you. Try another film.\n'
+                                              'To exit this command write "cancel"')
+            bot.register_next_step_handler(message, notify_films)
 
 
-def add_film_to_user(message):
+def add_film_to_user(message):  # Добавляю фильмы в базу данных пользователя
     if message.text == 'Yes':
-        for id in all_film_ids:
-            if id[0] not in d[message.chat.id]['imdb_id']:
-                d[message.chat.id]['imdb_id'].append(id)
-        bot.send_message(message.chat.id, 'Okay, I will notify you when it/they come out in your cinema \n'
+        for filmid in all_film_ids:
+            if filmid[0] not in d[message.chat.id]['imdb_id']:
+                d[message.chat.id]['imdb_id'].append(filmid)
+        bot.send_message(message.chat.id, 'Okay, I will notify you when it (they) come out in your cinema \n'
                                           'You can now check all your upcoming films by writing /my_films',
                          reply_markup=remove_markup)
-        functions.save_obj(d, 'data')
-    elif message.text == 'Try other film':
-        bot.send_message(message.chat.id, 'Write upcoming movie/movies you want to be notified about',
+        functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
+    elif message.text == 'Try another film':
+        bot.send_message(message.chat.id, 'Write upcoming movie (movies) you want to be notified about',
                          reply_markup=remove_markup)
         bot.register_next_step_handler(message, notify_films)
     else:
-        pass
+        bot.send_message(message.chat.id, 'Okay', reply_markup=remove_markup)
+
+
+@bot.message_handler(commands=['my_films'])  # Команда, которая выдает все отслеживаемые фильмы пользователя.
+def user_films(message):
+    if d[message.chat.id]['imdb_id']:
+        text = ''
+        for n, m in enumerate(d[message.chat.id]['imdb_id']):
+            text += f'{n + 1}) "{m[1]}" that will be released in {m[2]}.\n'
+        bot.send_message(message.chat.id, text)
+
+        markup = telebot.types.ReplyKeyboardMarkup()
+        button_1 = telebot.types.KeyboardButton('Yes')
+        button_2 = telebot.types.KeyboardButton('No')
+        button_3 = telebot.types.KeyboardButton('Clear list')
+        markup.add(button_1, button_2, button_3)
+
+        bot.send_message(message.chat.id, 'Do you want to delete any films from this list?', reply_markup=markup)
+        bot.register_next_step_handler(message, delete_user_film)
+    else:
+        bot.send_message(message.chat.id, "You don't have any films in your watch list.\n"
+                                          "To add films use /notify command")
+
+
+def delete_user_film(message):
+    if message.text == 'Yes':
+        bot.send_message(message.chat.id, 'Write film number (numbers) that you want to delete\n'
+                                          'Ex: 2, 4, 5', reply_markup=remove_markup)
+        bot.register_next_step_handler(message, delete_user_film2)
+    elif message.text == 'Clear list':
+        d[message.chat.id]['imdb_id'].clear()
+        functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
+        bot.send_message(message.chat.id, f'Okay, I cleared everything.', reply_markup=remove_markup)
+    elif message.text == 'No':
+        bot.send_message(message.chat.id, f'Okay', reply_markup=remove_markup)
+    else:
+        bot.register_next_step_handler(message, start)
+
+
+def delete_user_film2(message):  # Продолжение фунуции delete_user_film
+    if message.text.lower() == 'cancel':  # Для выхода из цикла, если пользователь продолжает писать неправильный инпут.
+        bot.send_message(message.chat.id, 'Operation canceled', reply_markup=remove_markup)
+    else:
+        try:
+            indices = [int(i) - 1 for i in message.text.split(',')]
+            for i in sorted(indices, reverse=True):
+                del d[message.chat.id]['imdb_id'][i]
+            functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
+            if d[message.chat.id]['imdb_id']:
+                text = ''
+                for n, m in enumerate(d[message.chat.id]['imdb_id']):
+                    text += f'{n + 1}) "{m[1]}" that will be released in {m[2]}.\n'
+                bot.send_message(message.chat.id, 'Films successfully deleted\n'
+                                                  f'Here is your new film list:\n{text}', reply_markup=remove_markup)
+        except ValueError:
+            # Если пользователь ввел что-то кроме цифр
+            bot.send_message(message.chat.id, 'I did not understand you\n'
+                                              'Write numbers using comma\n'
+                                              'Ex: 2, 4, 5\n\n'
+                                              'You can also cancel this opreation by typing "cancel"',
+                             reply_markup=remove_markup)
+            bot.register_next_step_handler(message, delete_user_film2)
+        except IndexError:
+            # Если к цифре пользователя не назначено никакого фильма
+            # (например у пользователя 3 фильма, а он просит удалить 4ый)
+            bot.send_message(message.chat.id, 'There is no movie with this number in your movie list\n'
+                                              'Write numbers using comma\n'
+                                              'Ex: 2, 4, 5\n\n'
+                                              'You can also cancel this opreation by typing "cancel"',
+                             reply_markup=remove_markup)
+            bot.register_next_step_handler(message, delete_user_film2)
+
+
+@bot.message_handler(commands=['forget_me'])  # Функция для удаления всех данных пользователя
+def forget_user(message):
+    markup = telebot.types.ReplyKeyboardMarkup()
+    button_1 = telebot.types.KeyboardButton('Yes')
+    button_2 = telebot.types.KeyboardButton('No')
+    markup.add(button_1, button_2)
+
+    bot.send_message(message.chat.id, 'Do really want to delete all information about yourself?\n'
+                                      'This process is irreversable.', reply_markup=markup)
+    bot.register_next_step_handler(message, delete_user_info)
+
+
+def delete_user_info(message):
+    if message.text == 'Yes':
+        d[message.chat.id] = user_params  # Ставлю дефолтные данные на место старых
+        functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
+        bot.send_message(message.chat.id, 'Your info is deleted.', reply_markup=remove_markup)
+    else:
+        bot.send_message(message.chat.id, 'Good choice', reply_markup=remove_markup)
 
 
 bot.polling()
