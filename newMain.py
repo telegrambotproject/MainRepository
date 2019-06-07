@@ -10,7 +10,7 @@ global d
 d = functions.load_obj('data')
 print(d)
 
-user_params = {'imdb_id': (), 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
+user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
 
 
@@ -24,8 +24,7 @@ def start(message):
                                       '/movies \n'
                                       '/notify - notify me of upcoming movies\n'
                                       '/my_films - to see or delete your current films\n'
-                                      '/forget_me - remove all information about the user\n'
-                                      '/discription - shows description for a movie', reply_markup=remove_markup)
+                                      '/forget_me - remove all information about the user', reply_markup=remove_markup)
 
 
 @bot.message_handler(commands=['movies'])
@@ -39,7 +38,7 @@ def movies(message):
     bot.register_next_step_handler(message, first_choice)
 
 
-# кол_во фидбмов - произвольное
+
 
 
 def first_choice(message):
@@ -108,6 +107,7 @@ def notify_films(message):  # Продолжение notify_start()
         bot.send_message(message.chat.id, 'Command canceled', reply_markup=remove_markup)
     else:
         text = ''
+        bot.send_chat_action(message.chat.id, 'typing')
         for m in message.text.split(','):
             imdb_id = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
             if imdb_id[0] != False:
@@ -160,6 +160,7 @@ def user_films(message):
         button_2 = telebot.types.KeyboardButton('No')
         button_3 = telebot.types.KeyboardButton('Clear list')
         markup.add(button_1, button_2, button_3)
+
         bot.send_message(message.chat.id, 'Do you want to delete any films from this list?', reply_markup=markup)
         bot.register_next_step_handler(message, delete_user_film)
     else:
