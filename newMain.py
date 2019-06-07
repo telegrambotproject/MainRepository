@@ -47,16 +47,16 @@ def first_choice(message):
         global list_of_movies
         list_of_movies = functions.search_current_movies(5)
         markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
-        for _ in range(5):
-            markup.add(f'{_ + 1}. {list_of_movies[_]["originalTitle"]},'
-                       f' {list_of_movies[_]["imdb_rating"]}')
-        bot.send_message(message.chat.id, "Let's get going then! Here are top 5 movies which are now ongoing!"
+        for i in range(5):
+            markup.add(f'{i + 1}. {list_of_movies[i]["originalTitle"]},'
+                       f' {list_of_movies[i]["imdb_rating"]}')
+        bot.send_message(message.chat.id, "Let's get going then! Here are top 5 movies which are now ongoing!\n"
                                           "Which of these interest you the most?", reply_markup=markup)
         bot.register_next_step_handler(message, selected_movie_description)
         count += 1
     elif message.text == 'No':
-        bot.send_message(message.chat.id, 'I am sorry to hear that!'
-                                          ' You can go mack to the movie menu by typing "/movie".'
+        bot.send_message(message.chat.id, 'I am sorry to hear that!\n'
+                                          ' You can go mack to the movie menu by typing /movie\n'
                                           'Or you may type "/start" to start all over again.')
     else:
         bot.send_message(message.chat.id, 'Please, choose one of the given two!')
@@ -107,8 +107,8 @@ def cinemas_nearby(coordinates):
                       info_cinema[0]['location']['longitude'])
     info_movies = functions.movies_in_cinema(info_cinema[0]['id'], chosen_movie)
     message = []
-    for _ in range(3):
-        schedule += f'{info_movies[0]["schedules"][_]["time"]}\n'
+    for m in info_movies[0]["schedules"]:
+        schedule += f'{m["time"]}\n'
     bot.send_message(coordinates.chat.id, f'And these are the closest sessions:\n{schedule}')
 # Название кинотеатра
 # Расписание
