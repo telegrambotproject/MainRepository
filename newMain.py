@@ -4,6 +4,8 @@ import functions
 telebot.apihelper.proxy = {'https': 'https://116.202.43.228:3128'}
 bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
+count = 0
+
 global d
 d = functions.load_obj('data')
 print(d)
@@ -28,53 +30,63 @@ def start(message):
 @bot.message_handler(commands=['movies'])
 def movies(message):
     markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
-    button_1 = telebot.types.KeyboardButton('Yes, please!')
-    button_2 = telebot.types.KeyboardButton('Hell no!')
+    button_1 = telebot.types.KeyboardButton('Yes')
+    button_2 = telebot.types.KeyboardButton('No!')
     markup.add(button_1, button_2)
     bot.send_message(message.chat.id, 'Hello there! Wanna see some movies?',
                      reply_markup=markup)
-    bot.register_next_step_handler(message, first_chose)
+    bot.register_next_step_handler(message, first_choice)
 
 
-def first_chose(message):
-    if message.text == 'Yes, please!':
+
+
+
+def first_choice(message):
+    global count
+    if (message.text == 'No' and count >= 1) or message.text == 'Yes':
         global list_of_movies
         list_of_movies = functions.search_current_movies(5)
-        markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=3)
-        for i in range(1, 6):
-            button = telebot.types.KeyboardButton(i)
-            markup.add(button)
-        line = ''
-        for m in list_of_movies:
-            line += f'"{m["originalTitle"]}", Imdb rating: {m["imdb_rating"]}\n'
-        bot.send_message(message.chat.id, line)
-        bot.send_message(message.chat.id, "Let's get going then! Which of these interest you the most?",
-                         reply_markup=markup)
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
+        for _ in range(5):
+            markup.add(f'{_ + 1}. {list_of_movies[_]["originalTitle"]},'
+                       f' {list_of_movies[_]["imdb_rating"]}')
+        bot.send_message(message.chat.id, "Let's get going then! Here are top 5 movies which are now ongoing!"
+                                          "Which of these interest you the most?", reply_markup=markup)
         bot.register_next_step_handler(message, selected_movie_description)
-    elif message.text == 'Hell no!':
-        markup = telebot.types.ReplyKeyboardRemove(selective=False)
-        bot.send_message(message.chat.id, 'I am sorry to hear that')
+        count += 1
+    elif message.text == 'No':
+        bot.send_message(message.chat.id, 'I am sorry to hear that!'
+                                          ' You can go mack to the movie menu by typing "/movie".'
+                                          'Or you may type "/start" to start all over again.')
+    else:
+        bot.send_message(message.chat.id, 'Please, choose one of the given two!')
+        movies(message)
 
 
+@bot.message_handler(commands=['discription'])
 def selected_movie_description(message):
     try:
-        movie = list_of_movies[int(message.text) - 1]
-        print(movie)
-        bot.send_message(message.chat.id, movie["annotationFull"])
-
-        markup = telebot.types.ReplyKeyboardMarkup()
-        button_1 = telebot.types.KeyboardButton('Yep')
-        button_2 = telebot.types.KeyboardButton('Nah')
+        movie = list_of_movies[int(message.text[0]) - 1]
+        markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
+        button_1 = telebot.types.KeyboardButton('Yes')
+        button_2 = telebot.types.KeyboardButton('No')
         markup.add(button_1, button_2)
-
-        bot.send_message(message.chat.id, f'{movie["originalTitle"]}\n\nAre you still interested?',
+        bot.send_message(message.chat.id, f'{ movie["annotationFull"]}\n\nAre you still interested?',
                          reply_markup=markup)
-        bot.register_next_step_handler(message, cinemas_nearby)
+        bot.register_next_step_handler(message, selected_movie_description_2)
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given')
 
 # Here we will place a function on location which Kirill is developing!!!
 # Next one is supposed to work which users location!
+
+
+def selected_movie_description_2(message):
+    if message.text == 'Yes':
+        bot.register_next_step_handler(message, cinemas_nearby)
+    elif message.text == 'No':
+        bot.send_message(message.chat.id, 'Alright, then please, choose something else!')
+        first_choice(message)
 
 
 def cinemas_nearby(coordinates):
