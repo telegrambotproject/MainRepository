@@ -1,8 +1,8 @@
 import telebot
 import functions
 
-telebot.apihelper.proxy = {'https': 'https://116.202.43.228:3128'}
-bot = telebot.TeleBot('846385082:AAHf9ZM9ulaRR0b79g9oBC1mRqCXaor6GiA')
+telebot.apihelper.proxy = {'https': 'https://95.216.119.75:3128'}
+bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
 
 count = 0
 
@@ -16,6 +16,7 @@ remove_markup = telebot.types.ReplyKeyboardRemove()
 
 @bot.message_handler(commands=['start'])
 def start(message):
+    bot.send_chat_action(message.chat.id, 'typing')
     if message.chat.id not in d:  # добавляю нового пользователя в базу данных
         d[message.chat.id] = user_params
         functions.save_obj(d, 'data')  # Сохраняю данные в фаил при помощи pickle
@@ -33,16 +34,15 @@ def movies(message):
     button_1 = telebot.types.KeyboardButton('Yes')
     button_2 = telebot.types.KeyboardButton('No!')
     markup.add(button_1, button_2)
+    bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Hello there! Wanna see some movies?',
                      reply_markup=markup)
     bot.register_next_step_handler(message, first_choice)
 
 
-
-
-
 def first_choice(message):
     global count
+    bot.send_chat_action(message.chat.id, 'typing')
     if (message.text == 'No' and count >= 1) or message.text == 'Yes':
         global list_of_movies
         list_of_movies = functions.search_current_movies(5)
@@ -65,6 +65,11 @@ def first_choice(message):
 
 @bot.message_handler(commands=['discription'])
 def selected_movie_description(message):
+    bot.send_chat_action(message.chat.id, 'typing')
+    a, b = message.text.split(', ')
+    a = a[2:]
+    global chosen_movie
+    chosen_movie = a
     try:
         movie = list_of_movies[int(message.text[0]) - 1]
         markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -77,20 +82,38 @@ def selected_movie_description(message):
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given')
 
-# Here we will place a function on location which Kirill is developing!!!
-# Next one is supposed to work which users location!
-
 
 def selected_movie_description_2(message):
-    if message.text == 'Yes':
-        bot.register_next_step_handler(message, cinemas_nearby)
-    elif message.text == 'No':
-        bot.send_message(message.chat.id, 'Alright, then please, choose something else!')
-        first_choice(message)
+    bot.send_chat_action(message.chat.id, 'typing')
+    try:
+        if message.text == 'Yes':
+            bot.send_message(message.chat.id, 'Okay! Then please send me your location!')
+            bot.register_next_step_handler(message, cinemas_nearby)
+        elif message.text == 'No':
+            bot.send_message(message.chat.id, 'Alright, then please, choose something else!')
+            first_choice(message)
+    except ValueError:
+        bot.send_message(message.chat.id, 'Please, choose one of the given')
 
 
 def cinemas_nearby(coordinates):
-    functions.nearest_cinemas()
+    schedule = ''
+    latitude = coordinates.location.latitude
+    longitude = coordinates.location.longitude
+    info_cinema = functions.nearest_cinemas(latitude, longitude)
+    bot.send_chat_action(coordinates.chat.id, 'typing')
+    bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
+    bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
+                      info_cinema[0]['location']['longitude'])
+    info_movies = functions.movies_in_cinema(info_cinema[0]['id'], chosen_movie)
+    message = []
+    for _ in range(3):
+        schedule += f'{info_movies[0]["schedules"][_]["time"]}\n'
+    bot.send_message(coordinates.chat.id, f'And these are the closest sessions:\n{schedule}')
+# Название кинотеатра
+# Расписание
+# Любимые кинотеатры
+# -------------------------------------- This line divides the functionality of a bot: current movies and future movies
 
 
 @bot.message_handler(commands=['notify'])  # Функция для напоминания пользователю о выходе новых фильмов

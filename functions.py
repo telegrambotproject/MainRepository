@@ -52,11 +52,11 @@ def search_current_movies(movie_number):  # кол-во фильмов
 
 
 def nearest_cinemas(lat, lon):
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas/geo'
+    URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
     PARAMS = {
         'apikey': key,
         'sort': 'distance',
-        'limit': 5,
+        'limit': 1,
         'latitude': lat,
         'longitude': lon
     }
@@ -68,26 +68,16 @@ def nearest_cinemas(lat, lon):
 # in the input of the function
 
 
-def movies_in_cinema(id):
-    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/movies'
-    URLname = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}'
-    PARAMSname = {
-        'apikey':key
-    }
+def movies_in_cinema(id, movie_name):
+    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/schedules'
     PARAMS = {
-        'apikey':key
+        'apikey': key,
+        'date': now.strftime("%d-%m-%Y"),
+        'search': movie_name
     }
-    rname = requests.get(url=URLname, params=PARAMSname)
-    dataname = rname.json()
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    cinemaname = dataname['shortTitle']
-    print(f'Movies in {cinemaname} are:')
-    for i in range(5):
-        print(data[i]["originalTitle"])
-
-# movies_in_cinema(227)
-# 227 = id of the particular cinema
+    return data
 
 
 def search_new_by_ganres(ganre):
