@@ -41,12 +41,9 @@ def first_chose(message):
         global list_of_movies
         list_of_movies = functions.search_current_movies(5)
         markup = telebot.types.ReplyKeyboardMarkup(resize_keyboard=3)
-        button_1 = telebot.types.KeyboardButton('1')
-        button_2 = telebot.types.KeyboardButton('2')
-        button_3 = telebot.types.KeyboardButton('3')
-        button_4 = telebot.types.KeyboardButton('4')
-        button_5 = telebot.types.KeyboardButton('5')
-        markup.add(button_1, button_2, button_3, button_4, button_5)
+        for i in range(1, 6):
+            button = telebot.types.KeyboardButton(i)
+            markup.add(button)
         line = ''
         for m in list_of_movies:
             line += f'"{m["originalTitle"]}", Imdb rating: {m["imdb_rating"]}\n'
