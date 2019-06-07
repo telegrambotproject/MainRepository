@@ -8,7 +8,7 @@ global d
 d = functions.load_obj('data')
 print(d)
 
-user_params = {'imdb_id': (), 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
+user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
 
 
@@ -98,6 +98,7 @@ def notify_films(message):  # Продолжение notify_start()
         bot.send_message(message.chat.id, 'Command canceled', reply_markup=remove_markup)
     else:
         text = ''
+        bot.send_chat_action(message.chat.id, 'typing')
         for m in message.text.split(','):
             imdb_id = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
             if imdb_id[0] != False:
