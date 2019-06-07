@@ -50,15 +50,17 @@ def search_current_movies(movie_number):  # кол-во фильмов
     data = r.json()
     return data
 
+for i in search_current_movies(30):
+    print(i)
 
-def nearest_cinemas():
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas/'
+def nearest_cinemas(lat, lon):
+    URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas/geo'
     PARAMS = {
         'apikey': key,
         'sort': 'distance',
         'limit': 5,
-        'latitude': 55.921336,
-        'longitude': 37.991876
+        'latitude': lat,
+        'longitude': lon
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
