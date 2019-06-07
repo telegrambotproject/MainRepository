@@ -2,7 +2,7 @@ import telebot
 import functions
 
 telebot.apihelper.proxy = {'https': 'https://116.202.43.228:3128'}
-bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
+bot = telebot.TeleBot('846385082:AAHf9ZM9ulaRR0b79g9oBC1mRqCXaor6GiA')
 
 count = 0
 
