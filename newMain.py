@@ -66,6 +66,10 @@ def first_choice(message):
 @bot.message_handler(commands=['discription'])
 def selected_movie_description(message):
     bot.send_chat_action(message.chat.id, 'typing')
+    a, b = message.text.split(', ')
+    a = a[2:]
+    global chosen_movie
+    chosen_movie = a
     try:
         movie = list_of_movies[int(message.text[0]) - 1]
         markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
@@ -93,6 +97,7 @@ def selected_movie_description_2(message):
 
 
 def cinemas_nearby(coordinates):
+    schedule = ''
     latitude = coordinates.location.latitude
     longitude = coordinates.location.longitude
     info_cinema = functions.nearest_cinemas(latitude, longitude)
@@ -100,8 +105,11 @@ def cinemas_nearby(coordinates):
     bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
     bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
                       info_cinema[0]['location']['longitude'])
-    functions.movies_in_cinema(info_cinema[0]['id'])
-
+    info_movies = functions.movies_in_cinema(info_cinema[0]['id'], chosen_movie)
+    message = []
+    for _ in range(3):
+        schedule += f'{info_movies[0]["schedules"][_]["time"]}\n'
+    bot.send_message(coordinates.chat.id, f'And these are the closest sessions:\n{schedule}')
 # Название кинотеатра
 # Расписание
 # Любимые кинотеатры

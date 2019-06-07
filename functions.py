@@ -62,19 +62,18 @@ def nearest_cinemas(lat, lon):
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    print(data)
     return data
 
 # nearest_cinemas() latitude and longitude from the user
 # in the input of the function
 
 
-def movies_in_cinema(id):
-    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/movies'
+def movies_in_cinema(id, movie_name):
+    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/schedules'
     PARAMS = {
         'apikey': key,
-        'sort': "rating",
         'date': now.strftime("%d-%m-%Y"),
+        'search': movie_name
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
