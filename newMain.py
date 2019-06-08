@@ -47,9 +47,9 @@ def first_choice(message):
             global list_of_movies
             list_of_movies = functions.search_current_movies(5)
             markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
-            for _ in range(5):
-                markup.add(f'{_ + 1}. {list_of_movies[_]["originalTitle"]},'
-                           f' {list_of_movies[_]["imdb_rating"]}')
+            for i in range(5):
+                markup.add(f'{i + 1}. {list_of_movies[i]["originalTitle"]},'
+                           f' {list_of_movies[i]["imdb_rating"]}')
             bot.send_message(message.chat.id, "Let's get going then! Here are top 5 movies which are now ongoing!"
                                               "Which of these interest you the most?", reply_markup=markup)
             bot.register_next_step_handler(message, selected_movie_description)
