@@ -7,7 +7,6 @@ telebot.apihelper.proxy = proxy
 API_TOKEN = '852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI'
 bot = telebot.TeleBot(API_TOKEN)
 
-
 location = ['']  # нужно переписать
 waypoints = []
 waypoint_id = []
@@ -17,7 +16,6 @@ print(d)
 
 user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
-
 
 functions.request_proxy(proxy)
 functions.fake_ssl()
@@ -67,7 +65,7 @@ def first_choice(message):
             counter += 1
         elif message.text == 'No':
             bot.send_message(message.chat.id, 'I am sorry to hear that!'
-                                              ' You can go mack to the movie menu by typing "/movie".'
+                                              ' You can go back to the movie menu by typing "/movie".'
                                               'Or you may type "/start" to start all over again.')
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given two!')
@@ -86,7 +84,7 @@ def selected_movie_description(message):
         button_1 = telebot.types.KeyboardButton('Yes')
         button_2 = telebot.types.KeyboardButton('No')
         markup.add(button_1, button_2)
-        bot.send_message(message.chat.id, f'{ movie["annotationFull"]}\n\nAre you still interested?',
+        bot.send_message(message.chat.id, f'{movie["annotationFull"]}\n\nAre you still interested?',
                          reply_markup=markup)
         bot.register_next_step_handler(message, selected_movie_description_2)
     except ValueError:
@@ -113,9 +111,13 @@ def cinemas_nearby(coordinates):
         longitude = coordinates.location.longitude
         info_cinema = functions.nearest_cinemas(latitude, longitude)
         bot.send_chat_action(coordinates.chat.id, 'typing')
-        bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
-        bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
-                          info_cinema[0]['location']['longitude'])
+        bot.send_message(coordinates.chat.id,
+                         f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
+        # bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
+        #                   info_cinema[0]['location']['longitude'])
+        bot.send_message(coordinates.chat.id, functions.route([f'{latitude}, {longitude}'],
+                                                              [info_cinema[0]["location"]["latitude"] + ',' +
+                                                              info_cinema[0]["location"]["longitude"]], [""]))
         info_movies = functions.movies_in_cinema(info_cinema[0]['id'], chosen_movie)
         message = []
         for m in info_movies[0]["schedules"]:
@@ -124,6 +126,8 @@ def cinemas_nearby(coordinates):
     except AttributeError:
         bot.send_message(coordinates.chat.id, 'Please, choose one of the given')
     # Название кинотеатра
+
+
 # Расписание
 # Любимые кинотеатры
 # -------------------------------------- This line divides the functionality of a bot: current movies and future movies
@@ -235,7 +239,7 @@ def delete_user_film2(message):  # Продолжение фунуции delete_
                 for n, m in enumerate(d[message.chat.id]['imdb_id']):
                     text += f'{n + 1}) "{m[1]}" that will be released in {m[2]}.\n'
                 bot.send_message(message.chat.id, 'Films successfully deleted\n'
-                                                  f'Here is your new film list:\n{text}', reply_markup=remove_markup)
+                f'Here is your new film list:\n{text}', reply_markup=remove_markup)
         except ValueError:
             # Если пользователь ввел что-то кроме цифр
             bot.send_message(message.chat.id, 'I did not understand you\n'
