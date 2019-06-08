@@ -2,8 +2,10 @@ import telebot
 import functions
 import urllib
 
-telebot.apihelper.proxy = {'https': 'https://95.216.119.75:3128'}
-bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
+proxy = {'https': 'https://95.216.119.75:3128'}
+telebot.apihelper.proxy = proxy
+API_TOKEN = '852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI'
+bot = telebot.TeleBot(API_TOKEN)
 
 
 location = ['']  # нужно переписать
@@ -16,11 +18,6 @@ print(d)
 user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
 
-with open('info/g_key.txt') as f:  # Ключ для google api
-    g_key = f.read()
-
-
-proxy = {'https': 'https://188.152.158.252:8118'}
 
 functions.request_proxy(proxy)
 functions.fake_ssl()
@@ -287,6 +284,9 @@ def handle_location(message):
 
 
 def get_places(message):  # Поиск множества мест
+    with open('keys/g_key.txt') as f:  # Ключ для google api
+        global g_key
+        g_key = f.read()
     places = message.text.split(',')
     print(places)
     for p in places:

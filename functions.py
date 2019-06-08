@@ -1,13 +1,12 @@
-import requests
 import pickle
 import datetime
 import requests
-from pydub import AudioSegment
-import speech_recognition as sr
-import apiai, json
+import json
 import urllib
 import urllib.request as urlrequest
 import ssl
+
+
 
 now = datetime.datetime.now()
 
@@ -19,12 +18,7 @@ with open('keys/imdbapi.txt') as f:
 
 with open('keys/apikey.txt') as f:
     key = f.read()
-with open('info/auth.json') as f:  # Ключ для google speech
-    credentials = f.read()
-with open('info/dialogflow.txt') as f:  # Ключ для dialogflow
-    dialogflow = f.read()
-with open('info/g_key.txt') as f:  # Ключ для google api
-    google_key = f.read()
+
 
 
 def request_proxy(proxy):
@@ -231,6 +225,15 @@ def route(loc, waypoints, waypoint_id):
 
 
 def google_speech_request(file):
+    from pydub import AudioSegment
+    import speech_recognition as sr
+    import apiai
+    with open('keys/auth.json') as f:  # Ключ для google speech
+        credentials = f.read()
+
+    with open('keys/dialogflow.txt') as f:  # Ключ для dialogflow
+        dialogflow = f.read()
+
     r = sr.Recognizer()  # нужно для библиотеки "speech_recognition"
     with open('audio.ogg', 'wb') as audio:  # сохраняю аудио на компьютер.
         audio.write(file.read())
