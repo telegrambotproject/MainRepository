@@ -12,7 +12,7 @@ with open('info/auth.json') as f:  # Ключ для google speech
 with open('info/dialogflow.txt') as f:  # Ключ для dialogflow
     dialogflow = f.read()
 with open('info/key.txt') as f:  # Ключ для google api
-    key = f.read()
+    google_key = f.read()
 
 
 def request_proxy(proxy):
@@ -33,9 +33,9 @@ def fake_ssl():
 # Поиск мест рядом через google api
 # loc = "Широта, Долгота"
 # name = "Название места"
-def search(loc: str, name, key):
+def search(loc: str, name, g_key):
     url = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
-    params = {'key': key,
+    params = {'key': g_key,
               'name': name,
               'radius': 1500,
               'location': loc,

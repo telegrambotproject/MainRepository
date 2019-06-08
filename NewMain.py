@@ -4,7 +4,7 @@ import functions
 
 
 with open('info/key.txt') as f:  # Ключ для google api
-    key = f.read()
+    g_key = f.read()
 
 
 proxy = {'https': 'https://188.152.158.252:8118'}
@@ -33,7 +33,7 @@ def get_places(message):  # Поиск множества мест
     places = message.text.split(',')
     print(places)
     for p in places:
-        response = functions.search(location[0], p, key)  # параметр location - глобальный.
+        response = functions.search(location[0], p, g_key)  # параметр location - глобальный.
         print(response['results'][0])
         lat = response['results'][0]['geometry']['location']['lat']
         lon = response['results'][0]['geometry']['location']['lng']
