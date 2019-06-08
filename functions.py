@@ -79,7 +79,7 @@ def google_speech_request(file):
         print(text)
         responseJson = json.loads(request.getresponse().read().decode('utf-8'))
         print(responseJson)
-        response = responseJson['result']['fulfillment']['speech']  # Разбираем JSON и вытаскиваем ответ
+        response = responseJson['result']['contexts'][0]['parameters']  # Разбираем JSON и вытаскиваем ответ
         # Если есть ответ от бота - присылаем юзеру, если нет, то гугл не разобрал аудио.
         if response:
             return f'You said: "{text}"\nBot responded: "{response}"'
