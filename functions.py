@@ -86,6 +86,6 @@ def google_speech_request(file):
         else:
             return f'I think you said: "{text}", but I did not understand you'
     except sr.UnknownValueError:
-        return 'Error: UnknownValueError'
+        return 'UnknownValueError'
     except sr.RequestError as e:
         return f"Could not request results from Google Speech Recognition service; {e}"
