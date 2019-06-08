@@ -13,7 +13,7 @@ functions.request_proxy(proxy)
 functions.fake_ssl()
 
 telebot.apihelper.proxy = proxy  # Прокси для телеграм бота бота
-API_TOKEN = '846385082:AAHf9ZM9ulaRR0b79g9oBC1mRqCXaor6GiA'
+API_TOKEN = ''
 bot = telebot.TeleBot(API_TOKEN)
 
 
