@@ -43,7 +43,7 @@ def search_movies(movie_id):  # Не работает, нужно перепис
 def search_current_movies(movie_number):  # кол-во фильмов
     URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/recommend'
     PARAMS = {
-        'apikey':key,
+        'apikey': key,
         'limit': movie_number
     }
     r = requests.get(url=URL, params=PARAMS)
@@ -126,27 +126,44 @@ def get_imdb_id(movie_name):  # get imdb id of an upcoming movie
     r = requests.get(url=URL, params=PARAMS)  # Первый реквест, что бы найти фильмы с похожим названием
     data = r.json()
     if r.status_code == 200 and int(data['total_results']) > 0:
-        film_date = "3000-01-01"
-        film_id = "False"
-        for m in data['results']:  # Беру ближайший фильм из списка
-            if now.strftime("%Y-%m-%d") < m['release_date'] and m['release_date'] < film_date:
-                film_date = m['release_date']
-                film_id = m['id']
-        if film_id != False:
-            URL = 'https://api.themoviedb.org/3/movie/' + str(film_id)
-            PARAMS = {
-                'api_key': imdb_key,
-            }
-            r = requests.get(url=URL, params=PARAMS)  # Реквест для нахождения imdb id фильма
-            data = r.json()
-            film_date = date_conversion(film_date)
-            return data.get('imdb_id', [False]*3)[2], data.get('original_title', False), film_date
-        else:
-            print(data)
-            return False, None, None
+        return data
+    else:
+        print(data)
+        return False
+
+
+def get_future_movies(data):
+    film_date = "3000-01-01"
+    film_id = "False"
+    for m in data['results']:  # Беру ближайший фильм из списка
+        if now.strftime("%Y-%m-%d") < m['release_date'] < film_date:
+            film_date = m['release_date']
+            film_id = m['id']
+    if film_id != False:
+        URL = 'https://api.themoviedb.org/3/movie/' + str(film_id)
+        PARAMS = {
+            'api_key': imdb_key,
+        }
+        r = requests.get(url=URL, params=PARAMS)  # Реквест для нахождения imdb id фильма
+        data = r.json()
+        film_date = date_conversion(film_date)
+        return data.get('imdb_id', [False] * 3)[2], data.get('original_title', False), film_date
     else:
         print(data)
         return False, None, None
 
 
+def current_movie_list():
+    for i in range(1, 2):
+        URL = 'https://api.themoviedb.org/3/movie/upcoming'
+        PARAMS = {
+            'api_key': imdb_key,
+            'page': i
+        }
+        r = requests.get(url=URL, params=PARAMS)  # Первый реквест, что бы найти фильмы с похожим названием
+        data = r.json()['results']
+        print(data)
+        for k in data:
+            title = str(k['title'])
+            print(f'"{title}","{title}"')
 

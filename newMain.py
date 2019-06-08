@@ -132,10 +132,12 @@ def notify_films(message):  # Продолжение notify_start()
         text = ''
         bot.send_chat_action(message.chat.id, 'typing')
         for m in message.text.split(','):
-            imdb_id = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
-            if imdb_id[0] != False:
-                text += f'"{imdb_id[1]}" will be released in {imdb_id[2]}.\n'
-                all_film_ids.append(imdb_id)
+            imdb_ids = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
+            if imdb_ids != False:
+                upcoming_f = functions.get_future_movies(imdb_ids)
+                if upcoming_f[0] != False:
+                    text += f'"{upcoming_f[1]}" will be released in {upcoming_f[2]}.\n'
+                    all_film_ids.append(upcoming_f)
         if all_film_ids:
             bot.send_message(message.chat.id, text)
 
