@@ -55,26 +55,28 @@ def nearest_cinemas(lat, lon):
     URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
     PARAMS = {
         'apikey': key,
-        'sort': 'distance',
-        'limit': 1,
         'latitude': lat,
-        'longitude': lon
+        'longitude': lon,
+        'sort': 'distance'
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    print(data)
+    data = sorted(data, key=lambda x: x['distance'])  # Сортировка кинотеатров по растоянию.
     return data
+
+
+# print(nearest_cinemas(55.730897, 37.629541))
 
 # nearest_cinemas() latitude and longitude from the user
 # in the input of the function
 
 
-def movies_in_cinema(id):
-    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/movies'
+def movies_in_cinema(id, movie_name):
+    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/schedules'
     PARAMS = {
         'apikey': key,
-        'sort': "rating",
         'date': now.strftime("%d-%m-%Y"),
+        'search': movie_name
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
