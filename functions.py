@@ -1,8 +1,8 @@
 import requests
 import pickle
 import datetime
-now = datetime.datetime.now()
 
+now = datetime.datetime.now()
 
 # functions for requests
 
@@ -22,28 +22,24 @@ def load_obj(name):
     with open('obj/' + name + '.pkl', 'rb') as file:
         return pickle.load(file)
 
-    
-def search_movies(movie_id):  # Не работает, нужно переписать!!!!
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/' + str(movie_id)
-    print(URL)
+
+def search_movies(id):  # Не работает, нужно переписать!!!!
+    URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/movies'
     PARAMS = {
-        'apikey': key
+        'apikey': key,
+        'limit': 10,
+        'date': now.strftime("%d-%m-%Y")
     }
     r = requests.get(url=URL, params=PARAMS)
     data = r.json()
-    print(data)
-    return data[0]['originalTitle'], data[0]['annotationFull'], data[0]['genres'][0]['name']
-
-# Example: id = 23211
-# print(search_movies(23211))
-
-# Vova: I changed the return of def below so that it fits the bot messages
+    return data
 
 
 def search_current_movies(movie_number):  # кол-во фильмов
-    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/recommend'
+    URL = 'https://api.kinohod.ru/api/rest/site/v1/movies'
     PARAMS = {
-        'apikey':key,
+        'apikey': key,
+        'date': now.strftime("%d-%m-%Y"),
         'limit': movie_number
     }
     r = requests.get(url=URL, params=PARAMS)
@@ -71,7 +67,7 @@ def nearest_cinemas(lat, lon):
 # in the input of the function
 
 
-def movies_in_cinema(id, movie_name):
+def sessions(id, movie_name):
     URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/schedules'
     PARAMS = {
         'apikey': key,
@@ -86,30 +82,32 @@ def movies_in_cinema(id, movie_name):
 def search_new_by_ganres(ganre):
     URL = 'https://api.kinohod.ru/api/rest/site/v1/movies/recommend'
     PARAMS = {
-        'apikey':key
+        'apikey': key
     }
-    r = requests.get(url=URL,params=PARAMS)
+    r = requests.get(url=URL, params=PARAMS)
     data = r.json()
     for i in range(len(data)):
         for j in range(len(data[i]['genres'])):
             if data[i]['genres'][j]['name'] == ganre:
                 print(data[i]['originalTitle'])
 
+
 # search_new_by_genres('экшен') there are around 30 ganres
 
 def get_id_cinema(cinema_name):
     URL = 'https://api.kinohod.ru/api/rest/site/v1/cinemas'
     PARAMS = {
-        'apikey':key
+        'apikey': key
     }
-    r = requests.get(url=URL,params=PARAMS)
+    r = requests.get(url=URL, params=PARAMS)
     data = r.json()
     for i in range(len(data)):
         if data[i]['shortTitle'] == cinema_name:
             print(data[i]['id'])
 
-#give this function a name of the cinema and it will give you the ID
-#Example: get_id('5 Звезд на Новокузнецкой')
+
+# give this function a name of the cinema and it will give you the ID
+# Example: get_id('5 Звезд на Новокузнецкой')
 
 
 def date_conversion(date):  # converting %Y-%m-%d  to %b %d %Y
@@ -140,13 +138,10 @@ def get_imdb_id(movie_name):  # get imdb id of an upcoming movie
             r = requests.get(url=URL, params=PARAMS)  # Реквест для нахождения imdb id фильма
             data = r.json()
             film_date = date_conversion(film_date)
-            return data.get('imdb_id', [False]*3)[2], data.get('original_title', False), film_date
+            return data.get('imdb_id', [False] * 3)[2], data.get('original_title', False), film_date
         else:
             print(data)
             return False, None, None
     else:
         print(data)
         return False, None, None
-
-
-

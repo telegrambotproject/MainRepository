@@ -28,39 +28,52 @@ def start(message):
 
 @bot.message_handler(commands=['movies'])
 def movies(message):
-    markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+    bot.send_chat_action(message.chat.id, 'typing')
+    markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
     button_1 = telebot.types.KeyboardButton('Yes')
     button_2 = telebot.types.KeyboardButton('No')
     markup.add(button_1, button_2)
-    bot.send_chat_action(message.chat.id, 'typing')
     bot.send_message(message.chat.id, 'Hello there! Wanna see some movies?',
                      reply_markup=markup)
-    bot.register_next_step_handler(message, first_choice)
+    bot.register_next_step_handler(message, location)
 
 
-def first_choice(message):
-    global counter
-    counter = 0
+def location(message):
+    bot.send_chat_action(message.chat.id, 'typing')
     try:
-        bot.send_chat_action(message.chat.id, 'typing')
-        if (message.text != 'Yes' and counter >= 1) or message.text == 'Yes':
-            global list_of_movies
-            list_of_movies = functions.search_current_movies(5)
-            markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
-            for _ in range(5):
-                markup.add(f'{_ + 1}. {list_of_movies[_]["originalTitle"]},'
-                           f' {list_of_movies[_]["imdb_rating"]}')
-            bot.send_message(message.chat.id, "Let's get going then! Here are top 5 movies which are now ongoing!"
-                                              "Which of these interest you the most?", reply_markup=markup)
-            bot.register_next_step_handler(message, selected_movie_description)
-            counter += 1
+        if message.text == 'Yes':
+            bot.send_message(message.chat.id, 'Okay! Then please send me your location!')
+            bot.register_next_step_handler(message, cinemas_nearby)
         elif message.text == 'No':
-            bot.send_message(message.chat.id, 'I am sorry to hear that!'
-                                              ' You can go mack to the movie menu by typing "/movie".'
-                                              'Or you may type "/start" to start all over again.')
+            bot.send_message(message.chat.id, 'Alright, then please, choose something else!')
+            bot.register_next_step_handler(message, start)
     except ValueError:
-        bot.send_message(message.chat.id, 'Please, choose one of the given two!')
-        movies(message)
+        bot.send_message(message.chat.id, 'Please, choose one of the given')
+
+
+def cinemas_nearby(coordinates):
+    try:
+        latitude = coordinates.location.latitude
+        longitude = coordinates.location.longitude
+        global info_cinema
+        info_cinema = functions.nearest_cinemas(latitude, longitude)
+        bot.send_chat_action(coordinates.chat.id, 'typing')
+        bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
+        bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
+                          info_cinema[0]['location']['longitude'])
+        global list_of_movies
+        list_of_movies = functions.search_movies(info_cinema[0]['id'])
+        print(list_of_movies)
+        markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
+        for i in range(5):
+            markup.add(f'{i + 1}. {list_of_movies[i]["originalTitle"]},'
+                       f' {list_of_movies[i]["imdb_rating"]}')
+        bot.send_message(coordinates.chat.id,
+                         "Let's get going then! Here are top 5 movies which are now ongoing and their IMDB rating!"
+                         " Which of these interest you the most?", reply_markup=markup)
+        bot.register_next_step_handler(coordinates, selected_movie_description)
+    except AttributeError:
+        bot.send_message(coordinates.chat.id, 'Please, choose one of the given')
 
 
 def selected_movie_description(message):
@@ -77,41 +90,23 @@ def selected_movie_description(message):
         markup.add(button_1, button_2)
         bot.send_message(message.chat.id, f'{ movie["annotationFull"]}\n\nAre you still interested?',
                          reply_markup=markup)
-        bot.register_next_step_handler(message, selected_movie_description_2)
+        bot.register_next_step_handler(message, movie_sessions)
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given')
 
 
-def selected_movie_description_2(message):
+def movie_sessions(message):
     bot.send_chat_action(message.chat.id, 'typing')
     try:
+        schedule = ''
         if message.text == 'Yes':
-            bot.send_message(message.chat.id, 'Okay! Then please send me your location!')
-            bot.register_next_step_handler(message, cinemas_nearby)
-        elif message.text == 'No':
-            bot.send_message(message.chat.id, 'Alright, then please, choose something else!')
-            first_choice(message)
+            info_movies = functions.sessions(info_cinema[0]['id'], chosen_movie)
+            for m in info_movies[0]["schedules"]:
+                schedule += f'{m["time"]}\n'
+            bot.send_message(message.chat.id, f'And these are the closest sessions:\n{schedule}')
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given')
 
-
-def cinemas_nearby(coordinates):
-    try:
-        schedule = ''
-        latitude = coordinates.location.latitude
-        longitude = coordinates.location.longitude
-        info_cinema = functions.nearest_cinemas(latitude, longitude)
-        bot.send_chat_action(coordinates.chat.id, 'typing')
-        bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
-        bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
-                          info_cinema[0]['location']['longitude'])
-        info_movies = functions.movies_in_cinema(info_cinema[0]['id'], chosen_movie)
-        message = []
-        for m in info_movies[0]["schedules"]:
-            schedule += f'{m["time"]}\n'
-        bot.send_message(coordinates.chat.id, f'And these are the closest sessions:\n{schedule}')
-    except AttributeError:
-        bot.send_message(coordinates.chat.id, 'Please, choose one of the given')
     # Название кинотеатра
 # Расписание
 # Любимые кинотеатры
