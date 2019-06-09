@@ -1,15 +1,24 @@
 import telebot
 import functions
+import urllib
 
-telebot.apihelper.proxy = {'https': 'https://95.216.119.75:3128'}
-bot = telebot.TeleBot('852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI')
+proxy = {'https': 'https://95.216.119.75:3128'}
+telebot.apihelper.proxy = proxy
+API_TOKEN = '852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI'
+bot = telebot.TeleBot(API_TOKEN)
 
+location = ['']  # нужно переписать
+waypoints = []
+waypoint_id = []
 global d
 d = functions.load_obj('data')
 print(d)
 
 user_params = {'imdb_id': [], 'favourite_cinema': ''}  # Дефалтный пресет для нового пользователя
 remove_markup = telebot.types.ReplyKeyboardRemove()
+
+functions.request_proxy(proxy)
+functions.fake_ssl()
 
 
 @bot.message_handler(commands=['start'])
@@ -23,6 +32,8 @@ def start(message):
                                       '/movies \n'
                                       '/notify - notify me of upcoming movies\n'
                                       '/my_films - to see or delete your current films\n'
+                                      '/favourite_cinema - set your favourite cinema \n'
+                                      '/route - make a route\n'
                                       '/forget_me - remove all information about the user', reply_markup=remove_markup)
 
 
@@ -88,7 +99,7 @@ def selected_movie_description(message):
         button_1 = telebot.types.KeyboardButton('Yes')
         button_2 = telebot.types.KeyboardButton('No')
         markup.add(button_1, button_2)
-        bot.send_message(message.chat.id, f'{ movie["annotationFull"]}\n\nAre you still interested?',
+        bot.send_message(message.chat.id, f'{movie["annotationFull"]}\n\nAre you still interested?',
                          reply_markup=markup)
         bot.register_next_step_handler(message, movie_sessions)
     except ValueError:
@@ -108,9 +119,35 @@ def movie_sessions(message):
         bot.send_message(message.chat.id, 'Please, choose one of the given')
 
     # Название кинотеатра
+
+
 # Расписание
 # Любимые кинотеатры
 # -------------------------------------- This line divides the functionality of a bot: current movies and future movies
+
+@bot.message_handler(commands=['favourite_cinema'])
+def favourite_cinema(message):
+    bot.send_message(message.chat.id, "Send your favourite cinema location")
+    bot.register_next_step_handler(message, favourite_cinema2)
+
+
+def favourite_cinema2(message):
+    try:
+        if message.content_type == "location":
+            latitude = message.location.latitude
+            longitude = message.location.longitude
+            info_cinema = functions.nearest_cinemas(latitude, longitude)
+            bot.send_chat_action(message.chat.id, 'typing')
+            bot.send_message(message.chat.id,
+                             f'I have set your favourite cinema to "{info_cinema[0]["shortTitle"]}"')
+            d["favourite_cinema"] = str(info_cinema[0]['id'])
+            functions.save_obj(d, 'data')
+        else:
+            bot.send_message(message.chat.id,
+                             f'You did not send the location')
+    except:
+        pass
+
 
 
 @bot.message_handler(commands=['notify'])  # Функция для напоминания пользователю о выходе новых фильмов
@@ -129,10 +166,12 @@ def notify_films(message):  # Продолжение notify_start()
         text = ''
         bot.send_chat_action(message.chat.id, 'typing')
         for m in message.text.split(','):
-            imdb_id = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
-            if imdb_id[0] != False:
-                text += f'"{imdb_id[1]}" will be released in {imdb_id[2]}.\n'
-                all_film_ids.append(imdb_id)
+            imdb_ids = functions.get_imdb_id(m)  # Запрос стороннему api, для получения imdb id фильма
+            if imdb_ids != False:
+                upcoming_f = functions.get_future_movies(imdb_ids)
+                if upcoming_f[0] != False:
+                    text += f'"{upcoming_f[1]}" will be released in {upcoming_f[2]}.\n'
+                    all_film_ids.append(upcoming_f)
         if all_film_ids:
             bot.send_message(message.chat.id, text)
 
@@ -217,7 +256,7 @@ def delete_user_film2(message):  # Продолжение фунуции delete_
                 for n, m in enumerate(d[message.chat.id]['imdb_id']):
                     text += f'{n + 1}) "{m[1]}" that will be released in {m[2]}.\n'
                 bot.send_message(message.chat.id, 'Films successfully deleted\n'
-                                                  f'Here is your new film list:\n{text}', reply_markup=remove_markup)
+                f'Here is your new film list:\n{text}', reply_markup=remove_markup)
         except ValueError:
             # Если пользователь ввел что-то кроме цифр
             bot.send_message(message.chat.id, 'I did not understand you\n'
@@ -256,6 +295,48 @@ def delete_user_info(message):
         bot.send_message(message.chat.id, 'Your info is deleted.', reply_markup=remove_markup)
     else:
         bot.send_message(message.chat.id, 'Good choice', reply_markup=remove_markup)
+
+
+@bot.message_handler(commands=['route'])  # Беру локацию от пользователя
+def get_user_location(message):
+    bot.send_message(message.chat.id, "Send your location.")
+    bot.register_next_step_handler(message, handle_location)
+
+
+def handle_location(message):
+    if message.content_type == "location":
+        location[0] = f'{message.location.latitude}, {message.location.longitude}'  # задаю глобальный параметр location.
+        bot.send_message(message.chat.id, "Напиши пару мест через запятую\n Например: Кино, Парк, Ресторан")
+        bot.register_next_step_handler(message, get_places)
+
+
+def get_places(message):  # Поиск множества мест
+    with open('keys/g_key.txt') as f:  # Ключ для google api
+        global g_key
+        g_key = f.read()
+    places = message.text.split(',')
+    print(places)
+    for p in places:
+        response = functions.search(location[0], p, g_key)  # параметр location - глобальный.
+        print(response['results'][0])
+        lat = response['results'][0]['geometry']['location']['lat']
+        lon = response['results'][0]['geometry']['location']['lng']
+        bot.send_message(message.chat.id, response['results'][0]['name'])
+        waypoints.append(f'{lat}, {lon}')
+        waypoint_id.append(response['results'][0]['place_id'])
+    m = functions.route(location[0], waypoints, waypoint_id)
+    print(m)
+    bot.send_message(message.chat.id, m)
+
+
+@bot.message_handler(content_types=['voice'])  # Функция ловит все голосовые сообщения
+def handle_voice(message):
+    print(message.voice)
+    file_info = bot.get_file(message.voice.file_id)
+    # рекветс через проксти, тк телеграм заблочен.
+    file = urllib.request.urlopen(f'https://api.telegram.org/file/bot{API_TOKEN}/{file_info.file_path}')
+    response = functions.google_speech_request(file)
+    bot.send_message(message.chat.id, response)
 
 
 bot.polling()
