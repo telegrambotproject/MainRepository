@@ -251,10 +251,18 @@ def google_speech_request(file):
         response = responseJson['result']['contexts'][0]['parameters']  # Разбираем JSON и вытаскиваем ответ
         # Если есть ответ от бота - присылаем юзеру, если нет, то гугл не разобрал аудио.
         if response:
-            return f'You said: "{text}"\nBot responded: "{response}"'
+            return text, response
         else:
             return f'I think you said: "{text}", but I did not understand you'
     except sr.UnknownValueError:
         return 'UnknownValueError'
     except sr.RequestError as e:
         return f"Could not request results from Google Speech Recognition service; {e}"
+
+
+def google_cinema_handler(response):
+    response.get('date')
+
+
+def google_notify_handler():
+    pass

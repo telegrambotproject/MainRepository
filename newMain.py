@@ -7,9 +7,14 @@ telebot.apihelper.proxy = proxy
 API_TOKEN = '852946157:AAEv1Cg91DaHgGeEgbAKDRvDmm3EGY55nSI'
 bot = telebot.TeleBot(API_TOKEN)
 
-location = ['']  # нужно переписать
-waypoints = []
-waypoint_id = []
+
+def_params = {'location': '',
+              'waypoints': [],
+              'waypoint_id': []}
+
+temp_info = {}
+
+
 global d
 d = functions.load_obj('data')
 print(d)
@@ -140,7 +145,7 @@ def favourite_cinema2(message):
             bot.send_chat_action(message.chat.id, 'typing')
             bot.send_message(message.chat.id,
                              f'I have set your favourite cinema to "{info_cinema[0]["shortTitle"]}"')
-            d["favourite_cinema"] = str(info_cinema[0]['id'])
+            d[message.chat.id]["favourite_cinema"] = str(info_cinema[0]['id'])
             functions.save_obj(d, 'data')
         else:
             bot.send_message(message.chat.id,
@@ -305,7 +310,8 @@ def get_user_location(message):
 
 def handle_location(message):
     if message.content_type == "location":
-        location[0] = f'{message.location.latitude}, {message.location.longitude}'  # задаю глобальный параметр location.
+        temp_info.setdefault(message.chat.id, def_params)
+        temp_info[message.chat.id]['location'] = f'{message.location.latitude}, {message.location.longitude}'  # задаю глобальный параметр location.
         bot.send_message(message.chat.id, "Напиши пару мест через запятую\n Например: Кино, Парк, Ресторан")
         bot.register_next_step_handler(message, get_places)
 
@@ -317,26 +323,47 @@ def get_places(message):  # Поиск множества мест
     places = message.text.split(',')
     print(places)
     for p in places:
-        response = functions.search(location[0], p, g_key)  # параметр location - глобальный.
+        response = functions.search(temp_info[message.chat.id]['location'], p, g_key)
         print(response['results'][0])
         lat = response['results'][0]['geometry']['location']['lat']
         lon = response['results'][0]['geometry']['location']['lng']
         bot.send_message(message.chat.id, response['results'][0]['name'])
-        waypoints.append(f'{lat}, {lon}')
-        waypoint_id.append(response['results'][0]['place_id'])
-    m = functions.route(location[0], waypoints, waypoint_id)
+        temp_info[message.chat.id]['waypoints'].append(f'{lat}, {lon}')
+        temp_info[message.chat.id]['waypoint_id'].append(response['results'][0]['place_id'])
+    m = functions.route(temp_info[message.chat.id]['location'],
+                        temp_info[message.chat.id]['waypoints'],
+                        temp_info[message.chat.id]['waypoint_id'])
+    temp_info[message.chat.id] = def_params
     print(m)
     bot.send_message(message.chat.id, m)
 
 
-@bot.message_handler(content_types=['voice'])  # Функция ловит все голосовые сообщения
-def handle_voice(message):
-    print(message.voice)
-    file_info = bot.get_file(message.voice.file_id)
-    # рекветс через проксти, тк телеграм заблочен.
-    file = urllib.request.urlopen(f'https://api.telegram.org/file/bot{API_TOKEN}/{file_info.file_path}')
-    response = functions.google_speech_request(file)
-    bot.send_message(message.chat.id, response)
+@bot.message_handler(commands=['voice'])
+def voice(message):
+    if d[message.chat.id]["favourite_cinema"]:
+        bot.send_message(message.chat.id, "Please set up your favourite cinema by typing /favourite_cinema "
+                                          "to use voice commans\n"
+                                          "You can change it at any time")
+    else:
+        bot.send_message(message.chat.id, "Now say your command to bot")
+        bot.register_next_step_handler(message, handle_voice)
+
+
+def handle_voice(message):  # голосовые команды
+    if message.content_type == 'voice':
+        print(message.voice)
+        file_info = bot.get_file(message.voice.file_id)
+        # рекветс через проксти, тк телеграм заблочен.
+        file = urllib.request.urlopen(f'https://api.telegram.org/file/bot{API_TOKEN}/{file_info.file_path}')
+        response = functions.google_speech_request(file)
+        try:
+            if not response['movie-notify']:
+                functions.google_cinema_handler()
+        except IndexError:
+            bot.send_message(message.chat.id, response)
+        bot.send_message(message.chat.id, response)
+    else:
+        bot.send_message(message.chat.id, "You did not use voice message. Try again by typing /voice")
 
 
 bot.polling()
