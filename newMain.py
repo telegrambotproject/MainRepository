@@ -32,6 +32,8 @@ def start(message):
                                       '/movies \n'
                                       '/notify - notify me of upcoming movies\n'
                                       '/my_films - to see or delete your current films\n'
+                                      '/favourite_cinema - set your favourite cinema \n'
+                                      '/route - make a route\n'
                                       '/forget_me - remove all information about the user', reply_markup=remove_markup)
 
 
@@ -64,9 +66,8 @@ def first_choice(message):
             bot.register_next_step_handler(message, selected_movie_description)
             counter += 1
         elif message.text == 'No':
-            bot.send_message(message.chat.id, 'I am sorry to hear that!'
-                                              ' You can go back to the movie menu by typing "/movie".'
-                                              'Or you may type "/start" to start all over again.')
+            bot.send_message(message.chat.id, 'You can go back to the movie menu by typing /movies \n'
+                                              'Or you may type /start to start all over again.')
     except ValueError:
         bot.send_message(message.chat.id, 'Please, choose one of the given two!')
         movies(message)
@@ -131,6 +132,30 @@ def cinemas_nearby(coordinates):
 # Расписание
 # Любимые кинотеатры
 # -------------------------------------- This line divides the functionality of a bot: current movies and future movies
+
+@bot.message_handler(commands=['favourite_cinema'])
+def favourite_cinema(message):
+    bot.send_message(message.chat.id, "Send your favourite cinema location")
+    bot.register_next_step_handler(message, favourite_cinema2)
+
+
+def favourite_cinema2(message):
+    try:
+        if message.content_type == "location":
+            latitude = message.location.latitude
+            longitude = message.location.longitude
+            info_cinema = functions.nearest_cinemas(latitude, longitude)
+            bot.send_chat_action(message.chat.id, 'typing')
+            bot.send_message(message.chat.id,
+                             f'I have set your favourite cinema to "{info_cinema[0]["shortTitle"]}"')
+            d["favourite_cinema"] = str(info_cinema[0]['id'])
+            functions.save_obj(d, 'data')
+        else:
+            bot.send_message(message.chat.id,
+                             f'You did not send the location')
+    except:
+        pass
+
 
 
 @bot.message_handler(commands=['notify'])  # Функция для напоминания пользователю о выходе новых фильмов
@@ -280,11 +305,17 @@ def delete_user_info(message):
         bot.send_message(message.chat.id, 'Good choice', reply_markup=remove_markup)
 
 
-@bot.message_handler(content_types=['location'])  # Беру локацию от пользователя
+@bot.message_handler(commands=['route'])  # Беру локацию от пользователя
+def get_user_location(message):
+    bot.send_message(message.chat.id, "Send your location.")
+    bot.register_next_step_handler(message, handle_location)
+
+
 def handle_location(message):
-    location[0] = f'{message.location.latitude}, {message.location.longitude}'  # задаю глобальный параметр location.
-    bot.send_message(message.chat.id, "Напиши пару мест через запятую\n Например: Кино, Парк, Ресторан")
-    bot.register_next_step_handler(message, get_places)
+    if message.content_type == "location":
+        location[0] = f'{message.location.latitude}, {message.location.longitude}'  # задаю глобальный параметр location.
+        bot.send_message(message.chat.id, "Напиши пару мест через запятую\n Например: Кино, Парк, Ресторан")
+        bot.register_next_step_handler(message, get_places)
 
 
 def get_places(message):  # Поиск множества мест
