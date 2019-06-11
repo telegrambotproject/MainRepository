@@ -81,9 +81,9 @@ def cinemas_nearby(coordinates):
         list_of_movies = functions.search_movies(info_cinema[0]['id'])
         print(list_of_movies)
         markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
-        for i in range(5):
-            markup.add(f'{i + 1}. {list_of_movies[i]["originalTitle"]},'
-                       f' {list_of_movies[i]["imdb_rating"]}')
+        for i, j in enumerate(list_of_movies):
+            markup.add(f'{i + 1}. {j["originalTitle"]},'
+                       f' {j["imdb_rating"]}')
         bot.send_message(coordinates.chat.id,
                          "Let's get going then! Here are top 5 movies which are now ongoing and their IMDB rating!"
                          " Which of these interest you the most?", reply_markup=markup)

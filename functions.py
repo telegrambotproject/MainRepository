@@ -47,7 +47,7 @@ def load_obj(name):
         return pickle.load(file)
 
 
-def search_movies(id):  # Не работает, нужно переписать!!!!
+def search_movies(id):
     URL = f'https://api.kinohod.ru/api/rest/site/v1/cinemas/{id}/movies'
     PARAMS = {
         'apikey': key,
