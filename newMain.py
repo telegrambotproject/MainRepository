@@ -1,6 +1,7 @@
 import telebot
 import functions
 import urllib
+from datetime import datetime
 
 proxy = {'https': 'https://95.216.119.75:3128'}
 telebot.apihelper.proxy = proxy
@@ -371,6 +372,15 @@ def handle_voice(message):  # голосовые команды
         bot.send_message(message.chat.id, response)
     else:
         bot.send_message(message.chat.id, "You did not use voice message. Try again by typing /voice")
+
+#notification delivery CLUB
+def notify(d):
+    for id, info in d.items():
+        for i in info['imdb_id']:
+            date_time_obj = datetime.datetime.strftime(i[2], '%b %d %Y')
+            if datetime.now() <= date_time_obj:
+                bot.send_message(id, f'Your favourite movie {i[1]} is coming out tomorrow!')
+            print(id, i[2])
 
 
 bot.polling()
