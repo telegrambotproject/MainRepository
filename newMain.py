@@ -10,7 +10,10 @@ bot = telebot.TeleBot(API_TOKEN)
 
 def_params = {'location': '',
               'waypoints': [],
-              'waypoint_id': []}
+              'waypoint_id': [],
+              'info_cinema': [],
+              'list_of_movies': []
+              }
 
 temp_info = {}
 
@@ -71,14 +74,15 @@ def cinemas_nearby(coordinates):
     try:
         latitude = coordinates.location.latitude
         longitude = coordinates.location.longitude
-        global info_cinema
-        info_cinema = functions.nearest_cinemas(latitude, longitude)
+        temp_info.setdefault(coordinates.chat.id, def_params)
+        temp_info[coordinates.chat.id]['info_cinema'] = functions.nearest_cinemas(latitude, longitude)
+        info_cinema = temp_info[coordinates.chat.id]['info_cinema']
         bot.send_chat_action(coordinates.chat.id, 'typing')
         bot.send_message(coordinates.chat.id, f'Here you go! The closest cinema is called "{info_cinema[0]["shortTitle"]}"')
         bot.send_location(coordinates.chat.id, info_cinema[0]['location']['latitude'],
                           info_cinema[0]['location']['longitude'])
-        global list_of_movies
-        list_of_movies = functions.search_movies(info_cinema[0]['id'])
+        temp_info[coordinates.chat.id]['list_of_movies'] = functions.search_movies(info_cinema[0]['id'])
+        list_of_movies = temp_info[coordinates.chat.id]['list_of_movies']
         print(list_of_movies)
         markup = telebot.types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
         for i, j in enumerate(list_of_movies):
@@ -99,6 +103,7 @@ def selected_movie_description(message):
     global chosen_movie
     chosen_movie = a
     try:
+        list_of_movies = temp_info[message.chat.id]['list_of_movies']
         movie = list_of_movies[int(message.text[0]) - 1]
         markup = telebot.types.ReplyKeyboardMarkup(one_time_keyboard=True)
         button_1 = telebot.types.KeyboardButton('Yes')
@@ -116,6 +121,7 @@ def movie_sessions(message):
     try:
         schedule = ''
         if message.text == 'Yes':
+            info_cinema = temp_info[message.chat.id]['info_cinema']
             info_movies = functions.sessions(info_cinema[0]['id'], chosen_movie)
             for m in info_movies[0]["schedules"]:
                 schedule += f'{m["time"]}\n'
@@ -141,7 +147,8 @@ def favourite_cinema2(message):
         if message.content_type == "location":
             latitude = message.location.latitude
             longitude = message.location.longitude
-            info_cinema = functions.nearest_cinemas(latitude, longitude)
+            temp_info[message.chat.id]['info_cinema'] = functions.nearest_cinemas(latitude, longitude)
+            info_cinema = temp_info[message.chat.id]['info_cinema']
             bot.send_chat_action(message.chat.id, 'typing')
             bot.send_message(message.chat.id,
                              f'I have set your favourite cinema to "{info_cinema[0]["shortTitle"]}"')
