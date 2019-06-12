@@ -2,6 +2,7 @@ import telebot
 import functions
 import urllib
 from datetime import datetime
+import threading
 
 proxy = {'https': 'https://95.216.119.75:3128'}
 telebot.apihelper.proxy = proxy
@@ -380,8 +381,10 @@ def notify(d):
             date_time_obj = datetime.strptime(i[2], '%b %d %Y')
             if datetime.now() >= date_time_obj:
                 bot.send_message(id, f'Your favourite movie {i[1]} is coming out tomorrow!')
-            print(id, i[2])
+                index = info['imdb_id'].index(i)
+                info['imdb_id'].pop(index)
+                functions.save_obj(d, 'data')
 
-notify(d)
+threading.Timer(5.0, notify(d)).start()
 
 bot.polling()
