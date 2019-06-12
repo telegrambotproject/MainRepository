@@ -374,7 +374,7 @@ def handle_voice(message):  # голосовые команды
     else:
         bot.send_message(message.chat.id, "You did not use voice message. Try again by typing /voice")
 
-#notification delivery CLUB
+#notification delivery
 def notify(d):
     for id, info in d.items():
         for i in info['imdb_id']:
