@@ -248,10 +248,10 @@ def google_speech_request(file):
         print(text)
         responseJson = json.loads(request.getresponse().read().decode('utf-8'))
         print(responseJson)
-        response = responseJson['result']['contexts'][0]['parameters']  # Разбираем JSON и вытаскиваем ответ
+        response = responseJson['result']['parameters']  # Разбираем JSON и вытаскиваем ответ
         # Если есть ответ от бота - присылаем юзеру, если нет, то гугл не разобрал аудио.
         if response:
-            return text, response
+            return f'You said: {text}\n Bot responded: {response}'
         else:
             return f'I think you said: "{text}", but I did not understand you'
     except sr.UnknownValueError:

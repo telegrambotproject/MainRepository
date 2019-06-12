@@ -149,6 +149,7 @@ def favourite_cinema2(message):
         if message.content_type == "location":
             latitude = message.location.latitude
             longitude = message.location.longitude
+            temp_info.setdefault(message.chat.id, def_params)
             temp_info[message.chat.id]['info_cinema'] = functions.nearest_cinemas(latitude, longitude)
             info_cinema = temp_info[message.chat.id]['info_cinema']
             bot.send_chat_action(message.chat.id, 'typing')
@@ -349,13 +350,13 @@ def get_places(message):  # Поиск множества мест
 
 @bot.message_handler(commands=['voice'])
 def voice(message):
-    if d[message.chat.id]["favourite_cinema"]:
-        bot.send_message(message.chat.id, "Please set up your favourite cinema by typing /favourite_cinema "
-                                          "to use voice commans\n"
-                                          "You can change it at any time")
-    else:
-        bot.send_message(message.chat.id, "Now say your command to bot")
-        bot.register_next_step_handler(message, handle_voice)
+    #if d[message.chat.id]["favourite_cinema"]:
+    #    bot.send_message(message.chat.id, "Please set up your favourite cinema by typing /favourite_cinema "
+    #                                      "to use voice commans\n"
+    #                                      "You can change it at any time")
+
+    bot.send_message(message.chat.id, "Now say your command to bot")
+    bot.register_next_step_handler(message, handle_voice)
 
 
 def handle_voice(message):  # голосовые команды
@@ -366,16 +367,18 @@ def handle_voice(message):  # голосовые команды
         file = urllib.request.urlopen(f'https://api.telegram.org/file/bot{API_TOKEN}/{file_info.file_path}')
         response = functions.google_speech_request(file)
         try:
-            if not response['movie-notify']:
-                functions.google_cinema_handler()
+            if not response:
+                print(response)
         except IndexError:
             bot.send_message(message.chat.id, response)
         bot.send_message(message.chat.id, response)
     else:
         bot.send_message(message.chat.id, "You did not use voice message. Try again by typing /voice")
 
+
 #notification delivery
-def notify(d):
+def notify():
+    threading.Timer(21600.0, notify).start()
     for id, info in d.items():
         for i in info['imdb_id']:
             date_time_obj = datetime.strptime(i[2], '%b %d %Y')
@@ -385,6 +388,6 @@ def notify(d):
                 info['imdb_id'].pop(index)
                 functions.save_obj(d, 'data')
 
-threading.Timer(21600.0, notify(d)).start()
 
+notify()
 bot.polling()
