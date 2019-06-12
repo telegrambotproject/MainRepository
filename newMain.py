@@ -385,6 +385,6 @@ def notify(d):
                 info['imdb_id'].pop(index)
                 functions.save_obj(d, 'data')
 
-threading.Timer(5.0, notify(d)).start()
+threading.Timer(21600.0, notify(d)).start()
 
 bot.polling()
